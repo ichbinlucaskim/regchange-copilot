@@ -1,0 +1,34 @@
+# 로컬 개발용 Postgres. 운영 환경 구성은 이 파일로 정의하지 않는다.
+#
+# 이미지 선택 이유:
+#   pgvector/pgvector:pg16 은 postgres:16 공식 이미지에 pgvector 확장을 미리
+#   빌드해 넣은 것이다. postgres:16 을 쓰고 확장을 직접 컴파일하면 로컬 셋업이
+#   느려지고 아키텍처(arm64/amd64)별로 실패한다.
+#
+# 트레이드오프:
+#   운영에서 관리형 Postgres(RDS/Cloud SQL)를 쓴다면 이 이미지와 확장 버전이
+#   일치하지 않을 수 있다. 로컬 셋업 속도를 얻는 대신 환경 동등성을 일부
+#   포기했다. 버전 차이로 인한 문제는 integration 테스트가 CI에서 관리형
+#   인스턴스를 대상으로 돌 때 드러나야 한다.
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: regchange-postgres
+    environment:
+      POSTGRES_USER: regchange
+      POSTGRES_PASSWORD: regchange_local_dev_only
+      POSTGRES_DB: regchange
+    ports:
+      - "5433:5432" # 5433: 호스트에 이미 떠 있는 Postgres와 충돌하지 않도록
+    volumes:
+      - regchange-pgdata:/var/lib/postgresql/data
+      # 최초 기동 시 1회만 실행된다. 볼륨이 이미 있으면 실행되지 않는다.
+      - ./infra/postgres-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U regchange -d regchange"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  regchange-pgdata:
