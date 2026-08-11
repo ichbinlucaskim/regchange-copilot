@@ -84,6 +84,13 @@ convention = "google"
 # 대신 "왜 이 테스트가 존재하는가" 한 줄을 요구한다 (CLAUDE.md §6).
 "tests/**" = ["D", "S101"]
 "evals/runners/**" = ["D103", "S101"]
+# scripts/exploration 은 0.7단계 API 실측용 일회성 도구다. src/ 로 승격되지 않는다.
+#  - T201: 표준출력이 이 스크립트의 결과물이다. 구조화 로그가 아니라 사람이 읽는 출력이다.
+#  - D103: 모듈 docstring으로 목적·트레이드오프를 기술했고, 개별 헬퍼까지 4항목을
+#    요구하면 탐색 속도를 떨어뜨린다.
+#  - S314: 신뢰된 로컬 픽스처만 파싱한다. TODO(verify): src/ 의 실제 파서는
+#    defusedxml 사용 여부를 ADR로 결정한다. 이 면제를 src/ 로 확대하지 않는다.
+"scripts/**" = ["T201", "D103", "S314", "E402"]
 
 [tool.ruff.lint.flake8-builtins]
 # adapters/ 의 모듈명은 외부 의존의 종류를 그대로 부른다(queue, secrets).
