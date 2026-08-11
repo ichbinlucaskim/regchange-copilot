@@ -38,3 +38,4 @@ evals/results/*
 # 용량이 크고 응답 본문에 OC가 echo될 수 있다(마스킹 후 저장하지만 커밋 대상 아님).
 # 집계 결과(data/frequency-summary.csv)만 커밋한다.
 data/frequency-cache/
+data/*.log
