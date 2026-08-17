@@ -303,6 +303,8 @@ docs(adr): record read-only DB role decision
 src/regchange/
 ├─ adapters/      외부 시스템 경계 (storage / queue / llm / secrets) — Protocol 정의
 ├─ ingest/        법령 원문 수집·정규화
+├─ parse/         조문 XML 파싱과 텍스트 정규화     [ADR-001, ADR-002]
+├─ store/         bitemporal 스키마·적재·시점 질의  [원칙 6]
 ├─ diff/          조문 단위 결정론적 차분          [원칙 1]
 ├─ temporal/      bitemporal 모델과 시점 재구성    [원칙 6]
 ├─ retrieval/     사내 규정 문단 검색
@@ -327,6 +329,7 @@ src/regchange/
 make setup      # uv sync — 의존성 설치
 make up         # docker compose up -d (Postgres + pgvector)
 make down       # docker compose down
+make migrate    # db/migrations 적용 (적용된 것은 건너뛴다)
 make lint       # ruff check
 make fmt        # ruff format + --fix
 make typecheck  # mypy strict
@@ -337,14 +340,20 @@ make test       # pytest
 
 ## 10. 현재 단계
 
-**0단계 — 스캐폴딩.** 비즈니스 로직은 아직 없다. 아래는 의도적으로 비어 있다:
+**수집 · 파싱 · 적재까지 구현됐다.** 아래는 아직 의도적으로 비어 있다:
 
-- 법제처 API 호출 코드
-- 조문 파서, diff 알고리즘
+- diff 알고리즘
 - LangGraph 노드·상태 정의
 - Terraform 코드
-- DB 스키마 마이그레이션 내용 (디렉터리만 존재)
 - 실제 규제 조항 번호와 법령 문구 (원문 미확인)
+
+채워진 것 (각각 실측 또는 픽스처 채점과 함께 들어왔다):
+
+- 법제처 API 호출 코드 — `ingest/`
+- 조문 파서 — `parse/`, 픽스처 채점 정확도 1.0000
+- DB 스키마와 적재 — `db/migrations/`, `store/`. 조문 `valid_from` 은 일자별 이력
+  API 결합 전까지 NULL(`PENDING_HISTORY`)이며, 본문의 조문시행일자를 승격하지 않는다
+  (edge-case #8, ADR-005)
 
 **검증 없이 쌓지 않는다.** 위 항목을 채우는 것은 1단계 이후의 일이며, 각각 원문 확인 또는
 평가 데이터셋과 함께 들어온다.

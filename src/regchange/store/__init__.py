@@ -1,0 +1,63 @@
+"""bitemporal 저장소 — 스키마 적용, 스냅샷 적재, 시점 질의.
+
+목적:
+    수집된 스냅샷을 파싱해 조문 단위로 DB 에 적재하고, "그 시점에 담당자가 알 수
+    있었던 정보는 무엇이었는가"에 답하는 시점 질의를 제공한다. 원칙 6(bitemporal)이
+    실제로 구현되는 곳이다.
+
+구현 이유:
+    `ingest`(수집)와 `parse`(해석) 사이에 저장 경계를 따로 둔다. 세 관심사가 다른
+    이유로 실패하기 때문이다 — 수집은 네트워크와 API 형태 때문에, 파싱은 XML 구조
+    때문에, 적재는 식별키와 제약 때문에 실패한다. 한 모듈에 섞으면 실패 원인을
+    구별할 수 없고, 구별할 수 없는 실패는 조용한 실패가 된다.
+
+    순수한 것과 I/O 를 이 안에서 다시 나눈다. `models`(건수 처분과 단언)와
+    `ministry`(코드/이름 해결)는 DB 없이 테스트되고, `loader`·`queries`·`migrate`만
+    커넥션을 받는다. 건수 단언과 부처 해결 규칙은 이 시스템이 조용한 누락을 겪은
+    바로 그 지점이라, DB 없이도 돌아가는 테스트로 고정해야 한다.
+
+트레이드오프:
+    적재 결과를 dataclass 로 되돌려주고 호출자가 그것을 검사하게 했다. 예외만
+    던지는 쪽이 코드는 짧지만, "몇 건이 건너뛰어졌는가"처럼 실패가 아닌 관측값을
+    표현할 수 없다. 그 관측값이 없으면 멱등 재적재가 정말 멱등이었는지 사후에
+    알 수 없다.
+
+    ORM 을 쓰지 않고 SQL 을 그대로 쓴다. bitemporal 질의의 핵심이 WHERE 절의
+    시간 조건이고, 그 조건은 감사에서 그대로 읽혀야 한다. ORM 이 만들어 준 SQL 을
+    감사에 제출할 수는 없다. 대신 매핑 코드를 손으로 쓰는 비용을 지불한다.
+
+엣지 케이스:
+    - 적재 중간에 프로세스가 죽는 경우: `load_run` 행이 없으므로 불완전한 적재가
+      완전한 것으로 보이지 않는다. 남은 문서는 고아 문서로 조회된다.
+    - 같은 스냅샷 재적재: 식별키로 이미 있으면 건너뛰고 건너뛴 수를 기록한다.
+      중복 제거로 해결하지 않는다 (edge-case #18).
+    - 식별키 충돌: 조용히 덮어쓰지 않고 두 행의 전체 필드를 남긴 뒤 run 을 중단한다.
+      충돌은 "우리 키가 틀렸다"는 신호이므로 계속 진행할 사안이 아니다.
+    - 소관부처가 마스터에 없는 경우: 적재는 진행하되 별도 처분(LOADED_UNRESOLVED)으로
+      세어, 적재 건수에 흡수되어 사라지지 않게 한다.
+"""
+
+from regchange.store.models import (
+    Disposition,
+    DocumentLoadResult,
+    KeyConflictError,
+    LoadCounts,
+    LoadError,
+    RunResult,
+)
+from regchange.store.timestamps import POSITIVE_INFINITY, register_infinity_timestamps
+
+# 열린 행의 `known_until = 'infinity'` 를 읽으려면 어댑터가 필요하다. 커넥션마다
+# 등록하는 대신 여기서 한 번 한다 — 등록을 잊은 커넥션 하나가 평소엔 잘 돌다가
+# 닫히지 않은 행을 읽는 순간에만 터지는 상황을 만들지 않기 위해서다.
+register_infinity_timestamps()
+
+__all__ = [
+    "POSITIVE_INFINITY",
+    "Disposition",
+    "DocumentLoadResult",
+    "KeyConflictError",
+    "LoadCounts",
+    "LoadError",
+    "RunResult",
+]
