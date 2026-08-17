@@ -169,6 +169,7 @@ forbidden_modules = [
     "regchange.adapters",
     "regchange.ingest",
     "regchange.api",
+    "regchange.store",
 ]
 
 # ---------------------------------------------------------------------------

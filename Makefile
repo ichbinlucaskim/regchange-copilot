@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help setup up down test lint typecheck fmt check clean
+.PHONY: help setup up down migrate test lint typecheck fmt check clean
 
 help: ## 사용 가능한 타깃을 출력한다
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -17,6 +17,9 @@ up: ## Postgres + pgvector 기동
 
 down: ## 컨테이너 종료 (볼륨은 유지)
 	docker compose down
+
+migrate: ## db/migrations 를 순서대로 적용 (적용된 것은 건너뛴다)
+	uv run python -m regchange.store
 
 test: ## 테스트 실행
 	uv run pytest
