@@ -37,6 +37,14 @@
       세어, 적재 건수에 흡수되어 사라지지 않게 한다.
 """
 
+from regchange.store.models import (
+    Disposition,
+    DocumentLoadResult,
+    KeyConflictError,
+    LoadCounts,
+    LoadError,
+    RunResult,
+)
 from regchange.store.timestamps import POSITIVE_INFINITY, register_infinity_timestamps
 
 # 열린 행의 `known_until = 'infinity'` 를 읽으려면 어댑터가 필요하다. 커넥션마다
@@ -44,4 +52,12 @@ from regchange.store.timestamps import POSITIVE_INFINITY, register_infinity_time
 # 닫히지 않은 행을 읽는 순간에만 터지는 상황을 만들지 않기 위해서다.
 register_infinity_timestamps()
 
-__all__ = ["POSITIVE_INFINITY"]
+__all__ = [
+    "POSITIVE_INFINITY",
+    "Disposition",
+    "DocumentLoadResult",
+    "KeyConflictError",
+    "LoadCounts",
+    "LoadError",
+    "RunResult",
+]

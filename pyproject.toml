@@ -96,6 +96,12 @@ convention = "google"
 #  - S314: 신뢰된 로컬 픽스처만 파싱한다. src/ 는 외부 HTTP 응답을 다루므로
 #    defusedxml을 쓴다 — 신뢰 경계가 다르다 (ADR-012). 이 면제를 src/ 로 확대하지 않는다.
 "scripts/**" = ["T201", "D103", "S314", "E402"]
+# 시점 질의 3종은 SELECT 컬럼 목록 상수 하나만 f-string 으로 보간한다. 보간되는 값은
+# 모듈 상수이며 호출자 입력이 닿지 않는다 — 시각·날짜는 전부 %(name)s 바인딩이다.
+#  - S608: 위 이유로 주입 경로가 없다. 질의를 한 덩어리 문자열로 두는 것은 의도된
+#    설계다(감사에서 읽을 원본이 WHERE 절 그 자체여야 한다). 이 면제를 다른 모듈로
+#    확대하지 않는다 — 확대하는 순간 사용자 입력이 섞인 질의도 함께 조용해진다.
+"src/regchange/store/queries.py" = ["S608"]
 
 [tool.ruff.lint.flake8-builtins]
 # adapters/ 의 모듈명은 외부 의존의 종류를 그대로 부른다(queue, secrets).
