@@ -11,9 +11,9 @@
 
 | 사실 | 확인 여부 |
 |---|---|
-| OC가 응답 본문에 그대로 echo된다 — `법령상세링크`, `조문링크`, `조문변경이력상세링크` 필드가 요청 URL을 통째로 담는다 | ✅ 실측 (`search_law_teukgeum.xml`, `dayjochg_regdt20250401.xml`, edge-case #1) |
-| 활용가이드의 OC 설명은 **"신청한 API인증값"** 한 줄이 전부다 | ✅ 확인 (`guideResult.do?htmlName=lsNwListGuide` 등) |
-| OC가 회원 이메일 아이디를 사용하며 **재발급해도 값이 같다** | ⚠️ **미확인.** 활용가이드·이용안내 어디에도 명시되어 있지 않다 |
+| OC가 응답 본문에 그대로 echo된다 — `법령상세링크`, `조문링크`, `조문변경이력상세링크` 필드가 요청 URL을 통째로 담는다 | O 실측 (`search_law_teukgeum.xml`, `dayjochg_regdt20250401.xml`, edge-case #1) |
+| 활용가이드의 OC 설명은 **"신청한 API인증값"** 한 줄이 전부다 | O 확인 (`guideResult.do?htmlName=lsNwListGuide` 등) |
+| OC가 회원 이메일 아이디를 사용하며 **재발급해도 값이 같다** | X **미확인.** 활용가이드·이용안내 어디에도 명시되어 있지 않다 |
 
 ### 운영 규칙
 
