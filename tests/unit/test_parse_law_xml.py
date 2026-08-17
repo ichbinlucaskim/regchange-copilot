@@ -311,3 +311,25 @@ def test_zero_articles_is_failure_not_success() -> None:
     xml = "<법령><기본정보><법령ID>000001</법령ID></기본정보><조문></조문></법령>"
     with pytest.raises(ParseError, match="0건"):
         parse_law_document(xml)
+
+
+def test_ministry_code_is_read_from_the_xml_attribute() -> None:
+    """소관부처코드는 자식 태그가 아니라 `<소관부처>`의 속성이다 (edge-case #20).
+
+    태그만 순회하는 파서는 이 값을 놓치고, 그러면 부처 해결이 이름으로 넘어간다.
+    이름은 조인 키가 아니다 (ADR-009). 값이 비는 것이 아니라 다른 키로 조용히
+    이동하므로, 속성에서 읽는다는 사실을 테스트로 고정한다.
+    """
+    document = parse_law_document(FIXTURES / "law_009244_mst252787.xml")
+    assert document.ministry == "금융위원회"
+    assert document.ministry_code == "1160100"
+
+
+def test_missing_ministry_element_yields_none_not_empty_string() -> None:
+    """`<소관부처>`가 없으면 None 이다. 빈 문자열을 부처 코드로 흘리지 않는다."""
+    xml = """<법령><기본정보><법령ID>000001</법령ID></기본정보><조문>
+    <조문단위 조문키="0001001"><조문번호>1</조문번호><조문여부>조문</조문여부>
+    <조문내용>제1조 목적</조문내용></조문단위></조문></법령>"""
+    document = parse_law_document(xml)
+    assert document.ministry is None
+    assert document.ministry_code is None

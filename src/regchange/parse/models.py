@@ -176,6 +176,15 @@ class LawDocument(Frozen):
     law_name: str
     law_kind: str | None
     ministry: str | None
+    ministry_code: str | None
+    """`<소관부처 소관부처코드="1160100">`의 **XML 속성**이다.
+
+    태그 텍스트만 읽으면 이 값을 통째로 놓친다 — 조문키가 `<조문단위>`의 속성이라
+    태그만 순회하는 파서가 놓쳤던 것(ADR-001)과 같은 함정이다. 부서 배정은 이름이
+    아니라 코드를 참조하므로(ADR-009), 이 값이 없으면 소관부처를 해결할 수 없다.
+    본문 픽스처 13개 전부에서 관측된다.
+    """
+
     promulgation_date: dt.date | None
     document_effective_date: dt.date | None
     units: tuple[ArticleUnit, ...]

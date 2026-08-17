@@ -235,6 +235,10 @@ def parse_law_document(source: str | Path) -> LawDocument:
         law_name=_find_text(basic, "법령명_한글").strip(),
         law_kind=_find_text(basic, "법종구분").strip() or None,
         ministry=_text(ministry_element).strip() or None,
+        # 속성이다. `find("소관부처코드")`로는 잡히지 않는다 (ADR-001의 조문키와 같은 함정).
+        ministry_code=(
+            None if ministry_element is None else ministry_element.get("소관부처코드") or None
+        ),
         promulgation_date=_parse_date(_find_text(basic, "공포일자")),
         document_effective_date=_parse_date(_find_text(basic, "시행일자")),
         units=tuple(units),
