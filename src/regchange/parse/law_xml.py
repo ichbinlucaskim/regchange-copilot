@@ -241,6 +241,10 @@ def parse_law_document(source: str | Path) -> LawDocument:
         ),
         revision_kind=_find_text(basic, "제개정구분").strip() or None,
         promulgation_date=_parse_date(_find_text(basic, "공포일자")),
+        promulgation_no=_find_text(basic, "공포번호").strip() or None,
         document_effective_date=_parse_date(_find_text(basic, "시행일자")),
+        # 원문 그대로 둔다. 해석은 하지 않는다 — 입도가 조문 단위보다 잘고
+        # 자유 텍스트라 파싱하면 ADR-007 의 PARSED 등급이 된다.
+        article_effective_dates_raw=_find_text(basic, "조문시행일자문자열").strip() or None,
         units=tuple(units),
     )

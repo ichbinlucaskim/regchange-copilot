@@ -249,10 +249,11 @@ async def load_document(
                 INSERT INTO regulation_document (
                     id, law_id, mst, law_name, law_kind,
                     ministry_code, ministry_name_observed, revision_kind,
-                    promulgation_date, document_effective_date,
+                    promulgation_date, promulgation_no,
+                    document_effective_date, article_effective_dates_raw,
                     source_key, source_run_id, source_page_sha256,
                     load_run_id, known_from
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """,
                 (
                     document_id,
@@ -264,7 +265,9 @@ async def load_document(
                     document.ministry,
                     document.revision_kind,
                     document.promulgation_date,
+                    document.promulgation_no,
                     document.document_effective_date,
+                    document.article_effective_dates_raw,
                     source_key,
                     source_run_id,
                     page_sha256,

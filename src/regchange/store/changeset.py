@@ -204,6 +204,18 @@ async def compute_change_set(
             f"다른 법령끼리 비교할 수 없다: {source.law_id} vs {target.law_id}. "
             "전 조문이 ADDED/DELETED 로 잡히고 그 결과는 그럴듯해 보인다"
         )
+    if source.promulgation_date == target.promulgation_date:
+        # 실패시키지 않는다. 그런 쌍을 비교해야 할 때 막히고, 그 경우의 올바른 처리가
+        # 아직 정해지지 않았다 — 처리 방법을 모르는 상태에서 차단부터 걸지 않는다
+        # (ADR-009 의 미지 부처명과 같은 논리). 대신 기록해 0건과 구별한다.
+        logger.warning(
+            "changeset.same_promulgation_date",
+            extra={
+                "law_id": source.law_id,
+                "promulgation_date": str(source.promulgation_date),
+                "note": "이동 표기 날짜 창이 비어 moves_in_window 가 0 이 된다",
+            },
+        )
     if source.promulgation_date > target.promulgation_date:
         raise DiffError(
             f"공포일자가 역전됐다: from {source.promulgation_date} > to "
@@ -266,8 +278,9 @@ async def _write(
                 from_article_count, to_article_count,
                 added, deleted, modified, editorial, unchanged,
                 moves_in_window, moves_out_of_window, out_of_window_dates,
-                candidate_pool_size
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                candidate_pool_size, same_promulgation_date
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                      %s)
             """,
             (
                 change_set_id,
@@ -289,6 +302,7 @@ async def _write(
                 result.moves_out_of_window,
                 Jsonb(list(result.out_of_window_dates)),
                 result.candidate_pool_size,
+                source.promulgation_date == target.promulgation_date,
             ),
         )
 
