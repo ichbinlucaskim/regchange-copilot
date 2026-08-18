@@ -65,11 +65,24 @@ async def _insert_article(
             INSERT INTO regulation_article (
                 id, document_id, article_key, seq_in_doc, unit_type,
                 article_no, branch_no, text_raw, text_norm, text_norm_sha256,
+                body_norm, body_norm_sha256,
                 norm_rule_version, valid_from_source, known_from, load_run_id
             ) VALUES (%s, %s, '0001001', %s, 'ARTICLE', 1, 0, %s, %s, %s,
+                      %s, %s,
                       'norm-v2', 'PENDING_HISTORY', %s, %s)
             """,
-            (article_id, document_id, seq, text, text, "1" * 64, known_from, uuid4()),
+            (
+                article_id,
+                document_id,
+                seq,
+                text,
+                text,
+                "1" * 64,
+                text,
+                "1" * 64,
+                known_from,
+                uuid4(),
+            ),
         )
     await conn.commit()
     return article_id
@@ -232,11 +245,13 @@ async def test_pending_history_cannot_carry_a_valid_from(
                 INSERT INTO regulation_article (
                     id, document_id, article_key, seq_in_doc, unit_type,
                     article_no, branch_no, text_raw, text_norm, text_norm_sha256,
+                    body_norm, body_norm_sha256,
                     norm_rule_version, valid_from, valid_from_source, known_from, load_run_id
                 ) VALUES (%s, %s, '0001001', 0, 'ARTICLE', 1, 0, 'x', 'x', %s,
+                          'x', %s,
                           'norm-v2', DATE '2023-07-18', 'PENDING_HISTORY', %s, %s)
                 """,
-                (uuid4(), document_id, "1" * 64, NOW, uuid4()),
+                (uuid4(), document_id, "1" * 64, "1" * 64, NOW, uuid4()),
             )
     await owner_conn.rollback()
 
@@ -254,11 +269,13 @@ async def test_history_api_source_requires_a_valid_from(
                 INSERT INTO regulation_article (
                     id, document_id, article_key, seq_in_doc, unit_type,
                     article_no, branch_no, text_raw, text_norm, text_norm_sha256,
+                    body_norm, body_norm_sha256,
                     norm_rule_version, valid_from_source, known_from, load_run_id
                 ) VALUES (%s, %s, '0001001', 0, 'ARTICLE', 1, 0, 'x', 'x', %s,
+                          'x', %s,
                           'norm-v2', 'HISTORY_API', %s, %s)
                 """,
-                (uuid4(), document_id, "1" * 64, NOW, uuid4()),
+                (uuid4(), document_id, "1" * 64, "1" * 64, NOW, uuid4()),
             )
     await owner_conn.rollback()
 

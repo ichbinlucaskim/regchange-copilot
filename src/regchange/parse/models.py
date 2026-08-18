@@ -185,6 +185,18 @@ class LawDocument(Frozen):
     본문 픽스처 13개 전부에서 관측된다.
     """
 
+    revision_kind: str | None
+    """`<제개정구분>` — 제정/일부개정/전부개정/타법개정 등.
+
+    **`법종구분`(법률/대통령령)과 다른 축이다.** 12개월 전수에서 조문 이벤트의
+    56.2%가 타법개정인데 변경이력 API의 `변경사유`로는 식별되지 않는다 —
+    타법개정 조문 20,070건의 변경사유가 전부 `조문변경`이다. 이 값을 따로 봐야
+    타법개정을 가릴 수 있다.
+
+    검색 API의 필드명은 `제개정구분명`이고 본문 API는 `제개정구분`이다. 같은 값을
+    가리키지만 태그 이름이 다르므로 계열별로 확인해야 한다.
+    """
+
     promulgation_date: dt.date | None
     document_effective_date: dt.date | None
     units: tuple[ArticleUnit, ...]

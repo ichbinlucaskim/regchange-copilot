@@ -59,6 +59,7 @@ from psycopg.types.json import Jsonb
 
 from regchange.adapters.storage import DocumentStore
 from regchange.ingest.snapshot import Manifest, read_pages
+from regchange.parse.assemble import assemble_body
 from regchange.parse.law_xml import parse_law_document
 from regchange.parse.models import ArticleUnit, LawDocument
 from regchange.store.ministry import (
@@ -111,8 +112,20 @@ async def fetch_ministry_master(
 
 
 def _article_payload(unit: ArticleUnit) -> dict[str, Any]:
-    """조문단위를 적재용 값으로 편다. 원문·정규화본·마커를 모두 보존한다."""
+    """조문단위를 적재용 값으로 편다. 원문·정규화본·조립본·마커를 모두 보존한다.
+
+    조립본(`body_norm`)은 `parse.assemble.assemble_body()` 가 만든다. 적재가 직접
+    이어붙이지 않는 이유는 조립 규칙이 두 곳으로 갈리지 않게 하기 위해서다 —
+    검색된 텍스트와 diff 한 텍스트가 달라지면 인용이 가리키는 것과 변경 판정의
+    대상이 어긋나고, 그 어긋남은 예외를 내지 않는다.
+    """
+    body = assemble_body(unit)
     return {
+        "body_norm": body.norm,
+        "body_norm_sha256": body.sha256,
+        "body_markers": [marker.model_dump(mode="json") for marker in body.markers],
+        "reference_raw": unit.reference_raw,
+        "moves": [move.model_dump(mode="json") for move in unit.moves],
         "article_key": unit.article_key,
         "seq_in_doc": unit.seq_in_doc,
         "unit_type": unit.unit_type.value,
@@ -235,11 +248,11 @@ async def load_document(
                 """
                 INSERT INTO regulation_document (
                     id, law_id, mst, law_name, law_kind,
-                    ministry_code, ministry_name_observed,
+                    ministry_code, ministry_name_observed, revision_kind,
                     promulgation_date, document_effective_date,
                     source_key, source_run_id, source_page_sha256,
                     load_run_id, known_from
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """,
                 (
                     document_id,
@@ -249,6 +262,7 @@ async def load_document(
                     document.law_kind,
                     observation.code_field,
                     document.ministry,
+                    document.revision_kind,
                     document.promulgation_date,
                     document.document_effective_date,
                     source_key,
@@ -280,7 +294,7 @@ async def load_document(
             payload = _article_payload(unit)
             await cur.execute(
                 """
-                SELECT id, text_norm_sha256, unit_type, article_no, branch_no
+                SELECT id, text_norm_sha256, body_norm_sha256, unit_type, article_no, branch_no
                   FROM regulation_article
                  WHERE document_id = %s AND article_key = %s AND seq_in_doc = %s
                    AND known_until = 'infinity'
@@ -289,7 +303,7 @@ async def load_document(
             )
             found = await cur.fetchone()
             if found is not None:
-                if found["text_norm_sha256"] != payload["text_norm_sha256"]:
+                if found["body_norm_sha256"] != payload["body_norm_sha256"]:
                     raise KeyConflictError(
                         key=(str(document_id), payload["article_key"], payload["seq_in_doc"]),
                         existing=dict(found),
@@ -305,6 +319,8 @@ async def load_document(
                     article_no, branch_no, title,
                     text_raw, text_norm, text_norm_sha256, norm_rule_version,
                     amendment_markers, body, heading_path,
+                    body_norm, body_norm_sha256, body_markers,
+                    reference_raw, moves,
                     article_key_source, valid_from, valid_from_source,
                     known_from, load_run_id
                 ) VALUES (
@@ -312,6 +328,8 @@ async def load_document(
                     %s, %s, %s,
                     %s, %s, %s, %s,
                     %s, %s, %s,
+                    %s, %s, %s,
+                    %s, %s,
                     'API', NULL, %s,
                     %s, %s
                 )
@@ -332,6 +350,11 @@ async def load_document(
                     Jsonb(payload["amendment_markers"]),
                     Jsonb(payload["body"]),
                     payload["heading_path"],
+                    payload["body_norm"],
+                    payload["body_norm_sha256"],
+                    Jsonb(payload["body_markers"]),
+                    payload["reference_raw"],
+                    Jsonb(payload["moves"]),
                     PENDING_HISTORY,
                     now,
                     load_run_id,

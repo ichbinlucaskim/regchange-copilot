@@ -77,9 +77,11 @@ async def _insert_article(
             INSERT INTO regulation_article (
                 id, document_id, article_key, seq_in_doc, unit_type,
                 article_no, branch_no, text_raw, text_norm, text_norm_sha256,
+                body_norm, body_norm_sha256,
                 norm_rule_version, valid_from, valid_to, valid_from_source,
                 known_from, load_run_id
             ) VALUES (%s, %s, %s, %s, 'ARTICLE', %s, 0, %s, %s, %s,
+                      %s, %s,
                       'norm-v2', %s, %s, 'HISTORY_API', %s, %s)
             """,
             (
@@ -89,6 +91,8 @@ async def _insert_article(
                 seq,
                 seq + 1,
                 text,
+                text,
+                f"{seq:064d}",
                 text,
                 f"{seq:064d}",
                 valid_from,
@@ -222,11 +226,13 @@ async def test_pending_valid_from_rows_are_invisible_to_all_three_queries(
             INSERT INTO regulation_article (
                 id, document_id, article_key, seq_in_doc, unit_type,
                 article_no, branch_no, text_raw, text_norm, text_norm_sha256,
+                body_norm, body_norm_sha256,
                 norm_rule_version, valid_from_source, known_from, load_run_id
             ) VALUES (%s, %s, '0001001', 0, 'ARTICLE', 1, 0, '미결합', '미결합', %s,
+                      '미결합', %s,
                       'norm-v2', 'PENDING_HISTORY', %s, %s)
             """,
-            (uuid4(), document_id, "9" * 64, KNOWN_FIRST, uuid4()),
+            (uuid4(), document_id, "9" * 64, "9" * 64, KNOWN_FIRST, uuid4()),
         )
     await owner_conn.commit()
 
@@ -247,14 +253,18 @@ async def test_headings_are_never_returned_as_citable_articles(
             INSERT INTO regulation_article (
                 id, document_id, article_key, seq_in_doc, unit_type,
                 article_no, branch_no, text_raw, text_norm, text_norm_sha256,
+                body_norm, body_norm_sha256,
                 norm_rule_version, valid_from, valid_from_source, known_from, load_run_id
             ) VALUES (%s, %s, '0011000', 0, 'HEADING', 1, 0, %s, %s, %s,
+                      %s, %s,
                       'norm-v2', DATE '2024-01-01', 'HISTORY_API', %s, %s)
             """,
             (
                 uuid4(),
                 document_id,
                 "제2편 금융투자업",
+                "제2편 금융투자업",
+                "8" * 64,
                 "제2편 금융투자업",
                 "8" * 64,
                 KNOWN_FIRST,

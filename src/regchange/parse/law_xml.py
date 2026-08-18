@@ -239,6 +239,7 @@ def parse_law_document(source: str | Path) -> LawDocument:
         ministry_code=(
             None if ministry_element is None else ministry_element.get("소관부처코드") or None
         ),
+        revision_kind=_find_text(basic, "제개정구분").strip() or None,
         promulgation_date=_parse_date(_find_text(basic, "공포일자")),
         document_effective_date=_parse_date(_find_text(basic, "시행일자")),
         units=tuple(units),
