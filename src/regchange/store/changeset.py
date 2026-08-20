@@ -40,6 +40,7 @@ from __future__ import annotations
 import datetime as dt
 import logging
 from dataclasses import dataclass
+from enum import StrEnum
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -50,6 +51,7 @@ from psycopg.types.json import Jsonb
 from regchange.diff import (
     CANDIDATE_POOL_WARN_SIZE,
     ArticleSnapshot,
+    DiffCounts,
     DiffError,
     DiffResult,
     MoveWindow,
@@ -72,10 +74,114 @@ class ChangeSetOutcome:
     """건너뛴 경우 None. 기존 행을 다시 계산해 비교하지 않는다."""
 
 
+CHANGE_RATIO_WARN = 0.5
+"""변경 조문 비율 경고 임계값 — (added+deleted+modified) / max(from_count, to_count).
+
+**0.5로 정한 근거는 실측 분포다.** 12개월 전수에서 `일부개정` 2,097건의 조문 이벤트가
+10,663건이므로 개정 1건당 평균 5조문이다 (`amendment-frequency.md` D-2). 코퍼스에서
+가장 큰 자체 개정도 정보통신망법 26조문 / 조문단위 181개(약 14%), 개인정보 보호법
+19조문 / 141개(약 13%)였다. **실제 일부개정은 0.5에 한참 못 미친다.**
+
+반대편 끝은 1.0이다 — 다른 법령을 비교하면 전 조문이 ADDED/DELETED로 잡히므로 비율이
+1.0에 가깝다. 0.5는 두 분포 사이의 빈 구간이며, 어느 쪽으로도 여유가 크다.
+
+**실패가 아니라 경고다.** `전부개정`은 정상적으로 이 값을 넘고, `일괄개정`(12개월
+597조문)도 넘을 수 있다. 넘었다는 사실만 기록하고 판단은 사람이 한다 — 모르는 상황에서
+차단부터 걸지 않는다는 이 저장소의 규칙(ADR-009의 미지 부처명과 같은 논리)을 따른다.
+"""
+
+FULL_AMENDMENT_KIND = "전부개정"
+"""이 `제개정구분명` 이면 변경 규모 판정을 하지 않는다. 전부 바뀌는 것이 정의다."""
+
+
+class MstResolutionSource(StrEnum):
+    """`from_mst` 를 어떻게 골랐는가 — **호출부가 주장하지 않고 파생된다**.
+
+    목적:
+        비교 짝의 출처를 값으로 남겨, 나중에 "이 diff 가 왜 이 두 버전을 비교했는가"에
+        답할 수 있게 한다.
+
+    구현 이유:
+        호출부가 이 값을 직접 넘기지 않는다. `resolved_from_mst` 와 실제 `from` 문서의
+        MST 를 대조해 **계산한다.** 호출부가 넘기게 두면 "RESOLVED 라고 적어 놓고 다른
+        MST 를 쓰는" 상태가 만들어질 수 있고, 그것은 이 장치가 막으려는 바로 그 실패다.
+
+    트레이드오프:
+        자동 확보를 시도하지 않은 경우(`resolved_from_mst is None`)와 사람이 지정한
+        경우가 둘 다 `MANUAL` 로 합쳐진다. 나누려면 값이 하나 더 필요한데, 실제로 그
+        둘을 구별해 할 일이 다르지 않다 — 어느 쪽이든 자동 확보 근거가 없다.
+
+    엣지 케이스:
+        - `MISMATCH` 는 **실패가 아니다.** 수동 지정 경로를 유지하기로 했으므로
+          불일치가 정상적으로 발생한다(골든셋 재현). 조용히 넘기지 않으려고 값으로 남긴다.
+    """
+
+    RESOLVED = "RESOLVED"
+    """`oldAndNew` 가 알려준 직전 MST 를 그대로 썼다."""
+
+    MANUAL = "MANUAL"
+    """사람이 지정했고 자동 확보값이 없다."""
+
+    MISMATCH = "MISMATCH"
+    """자동 확보값과 실제 사용값이 다르다. 로그와 이 컬럼에 남는다."""
+
+
+class FromDocumentSource(StrEnum):
+    """직전 버전 본문을 재사용했는가 다시 받았는가."""
+
+    REUSED = "REUSED"
+    REFETCHED = "REFETCHED"
+
+
+class ReuseSkipReason(StrEnum):
+    """재사용하지 않은 이유. `REFETCHED` 일 때만 의미가 있다.
+
+    `SHA256_MISMATCH` 는 다른 셋과 성질이 다르다 — 나머지는 "없어서 다시 받았다"이고
+    이것은 **"있는데 어긋났다"**이다. 저장된 파일이 변조됐거나 기록이 틀렸거나
+    둘 중 하나이며 어느 쪽이든 사건이다. 재수집으로 덮지 않고 남긴다.
+    """
+
+    NOT_ATTEMPTED = "NOT_ATTEMPTED"
+    NO_DOCUMENT = "NO_DOCUMENT"
+    NO_SNAPSHOT = "NO_SNAPSHOT"
+    SHA256_MISMATCH = "SHA256_MISMATCH"
+
+
+@dataclass(frozen=True, slots=True)
+class PairProvenance:
+    """비교 짝이 어떻게 만들어졌는가. `compute_change_set` 이 그대로 기록한다.
+
+    목적:
+        짝 선택의 근거를 diff 결과와 같은 행에 남긴다.
+
+    구현 이유:
+        `mst_resolution_source` 를 여기 넣지 않았다. 그것은 이 값과 실제 문서로부터
+        **파생**되며, 넣는 순간 호출부가 주장할 수 있게 된다 (`MstResolutionSource`
+        docstring 참조).
+
+    트레이드오프:
+        기본값이 "아무것도 시도하지 않음"이다. 수동 경로가 이 값을 넘기지 않아도
+        동작해야 하기 때문이다 — 골든셋 재현과 테스트가 그 경로를 쓴다.
+
+    엣지 케이스:
+        - `from_document_source` 가 None 이면 재사용 판정을 아예 하지 않은 것이다.
+          `REFETCHED` 와 구별된다 — 후자는 "판정했고 재수집했다"이다.
+    """
+
+    resolved_from_mst: str | None = None
+    from_document_source: FromDocumentSource | None = None
+    reuse_skip_reason: ReuseSkipReason | None = None
+
+
+NO_PROVENANCE = PairProvenance()
+"""자동 확보를 시도하지 않은 경우의 기본값. 수동 지정 경로가 이것을 쓴다."""
+
+
 @dataclass(frozen=True, slots=True)
 class _DocumentHeader:
     id: UUID
     law_id: str
+    mst: str
     promulgation_date: dt.date
     revision_kind: str | None
 
@@ -84,7 +190,7 @@ async def _read_document(conn: psycopg.AsyncConnection[Any], document_id: UUID) 
     async with conn.cursor(row_factory=dict_row) as cur:
         await cur.execute(
             """
-            SELECT id, law_id, promulgation_date, revision_kind
+            SELECT id, law_id, mst, promulgation_date, revision_kind
               FROM regulation_document
              WHERE id = %s AND known_until = 'infinity'
             """,
@@ -100,6 +206,7 @@ async def _read_document(conn: psycopg.AsyncConnection[Any], document_id: UUID) 
     return _DocumentHeader(
         id=row["id"],
         law_id=row["law_id"],
+        mst=row["mst"],
         promulgation_date=row["promulgation_date"],
         revision_kind=row["revision_kind"],
     )
@@ -162,12 +269,63 @@ async def _existing_change_set(
     return None if row is None else UUID(str(row[0]))
 
 
+def resolve_mst_source(
+    *, resolved_from_mst: str | None, actual_from_mst: str
+) -> MstResolutionSource:
+    """자동 확보값과 실제 사용값을 대조해 출처를 판정한다.
+
+    목적:
+        §3-3 연속성 검증. "자동으로 찾은 직전 MST"와 "실제로 diff에 쓴 from MST"가
+        같은지 본다.
+
+    구현 이유:
+        **이것이 없으면 나중에 "왜 이 diff가 이상하지"를 추적할 방법이 없다.**
+        두 단계 건너뛴 버전과 비교해도 예외가 나지 않고 결과는 그럴듯하다. 유일한
+        단서가 "우리가 찾은 것과 우리가 쓴 것이 다르다"는 사실이다.
+
+    트레이드오프:
+        불일치를 실패로 만들지 않는다. 수동 지정 경로를 유지하기로 했으므로(골든셋
+        재현·테스트) 불일치가 정상적으로 발생한다. 대신 값과 로그로 남긴다 —
+        차단하지 못하는 대신 추적 가능하게 했다.
+
+    엣지 케이스:
+        - `resolved_from_mst is None`: 자동 확보를 시도하지 않았다. `MANUAL`.
+        - 두 값이 같다: `RESOLVED`.
+        - 다르다: `MISMATCH`. **호출부가 이 값을 무시해도 DB에 남는다.**
+    """
+    if resolved_from_mst is None:
+        return MstResolutionSource.MANUAL
+    if resolved_from_mst == actual_from_mst:
+        return MstResolutionSource.RESOLVED
+    return MstResolutionSource.MISMATCH
+
+
+def change_ratio(counts: DiffCounts) -> float:
+    """변경 조문 비율. 분모는 두 버전의 조문 수 중 큰 쪽이다.
+
+    분모를 큰 쪽으로 잡는 이유: 조문 수가 크게 다른 두 문서를 비교하면 작은 쪽을
+    분모로 썼을 때 비율이 1.0을 넘어 의미를 잃는다. 큰 쪽은 보수적이다 — 같은
+    상황에서 비율이 낮게 나오므로 **경고가 덜 뜨는 방향**이며, 거짓 경고보다
+    놓친 경고가 비싼 이 도메인에서는 뒤집는 편이 나을 수도 있다. 지금은 실측
+    분포(§CHANGE_RATIO_WARN)의 여유가 크므로 보수적인 쪽을 택했다.
+
+    엣지 케이스:
+        - 두 문서 다 조문 0건: 0.0. 나눗셈을 하지 않는다. 파서가 0건 문서를 막으므로
+          정상 경로에서는 오지 않는다.
+    """
+    denominator = max(counts.from_article_count, counts.to_article_count)
+    if denominator == 0:
+        return 0.0
+    return (counts.added + counts.deleted + counts.modified) / denominator
+
+
 async def compute_change_set(
     conn: psycopg.AsyncConnection[Any],
     *,
     from_document_id: UUID,
     to_document_id: UUID,
     now: dt.datetime,
+    provenance: PairProvenance = NO_PROVENANCE,
 ) -> ChangeSetOutcome:
     """두 버전을 비교해 `change_set` 을 만든다.
 
@@ -244,6 +402,47 @@ async def compute_change_set(
             },
         )
 
+    mst_source = resolve_mst_source(
+        resolved_from_mst=provenance.resolved_from_mst, actual_from_mst=source.mst
+    )
+    if mst_source is MstResolutionSource.MISMATCH:
+        logger.warning(
+            "changeset.mst_mismatch",
+            extra={
+                "law_id": source.law_id,
+                "resolved_from_mst": provenance.resolved_from_mst,
+                "actual_from_mst": source.mst,
+                "to_mst": target.mst,
+                "note": "자동 확보한 직전 MST 와 실제 비교에 쓴 MST 가 다르다",
+            },
+        )
+    if provenance.reuse_skip_reason is ReuseSkipReason.SHA256_MISMATCH:
+        logger.warning(
+            "changeset.snapshot_sha256_mismatch",
+            extra={
+                "law_id": source.law_id,
+                "from_mst": source.mst,
+                "note": "저장된 스냅샷의 해시가 기록과 다르다. 재수집했으나 원인은 미확인 "
+                "— docs/incidents/ 기록 후보다",
+            },
+        )
+
+    ratio = change_ratio(result.counts)
+    full_amendment = target.revision_kind == FULL_AMENDMENT_KIND
+    ratio_exceeded = ratio > CHANGE_RATIO_WARN and not full_amendment
+    if ratio_exceeded:
+        logger.warning(
+            "changeset.change_ratio_exceeded",
+            extra={
+                "law_id": source.law_id,
+                "ratio": round(ratio, 4),
+                "threshold": CHANGE_RATIO_WARN,
+                "revision_kind": target.revision_kind,
+                "note": "다른 법령을 비교했을 가능성을 먼저 의심한다 "
+                "— 그 경우 비율이 1.0 에 가깝다",
+            },
+        )
+
     change_set_id = uuid4()
     await _write(
         conn,
@@ -252,6 +451,9 @@ async def compute_change_set(
         target=target,
         result=result,
         now=now,
+        mst_source=mst_source,
+        provenance=provenance,
+        ratio_exceeded=ratio_exceeded,
     )
     return ChangeSetOutcome(change_set_id=change_set_id, created=True, result=result)
 
@@ -264,6 +466,9 @@ async def _write(
     target: _DocumentHeader,
     result: DiffResult,
     now: dt.datetime,
+    mst_source: MstResolutionSource,
+    provenance: PairProvenance,
+    ratio_exceeded: bool,
 ) -> None:
     """한 트랜잭션으로 change_set 과 그 자식 행을 쓴다."""
     counts = result.counts
@@ -278,9 +483,11 @@ async def _write(
                 from_article_count, to_article_count,
                 added, deleted, modified, editorial, unchanged,
                 moves_in_window, moves_out_of_window, out_of_window_dates,
-                candidate_pool_size, same_promulgation_date
+                candidate_pool_size, same_promulgation_date,
+                mst_resolution_source, resolved_from_mst,
+                from_document_source, reuse_skip_reason, change_ratio_exceeded
             ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                      %s)
+                      %s, %s, %s, %s, %s, %s)
             """,
             (
                 change_set_id,
@@ -303,6 +510,15 @@ async def _write(
                 Jsonb(list(result.out_of_window_dates)),
                 result.candidate_pool_size,
                 source.promulgation_date == target.promulgation_date,
+                mst_source.value,
+                provenance.resolved_from_mst,
+                None
+                if provenance.from_document_source is None
+                else provenance.from_document_source.value,
+                None
+                if provenance.reuse_skip_reason is None
+                else provenance.reuse_skip_reason.value,
+                ratio_exceeded,
             ),
         )
 

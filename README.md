@@ -164,18 +164,25 @@ src/regchange/
 발송 워커(`dispatch/`), 감사(`audit/`), Terraform. **검증 없이 쌓지 않는다** —
 각 항목은 평가 데이터셋 또는 원문 확인과 함께 들어온다.
 
-### 3단계(검색·근거 강제) 착수 전 선행 항목
+### R-21 해소 (2026-08-19) — 자동 diff 경로가 열렸다
 
-**R-21 — 이전 MST 확보 경로**(`docs/04-risk-register.md`). 해소되지 않으면 운영에서
-diff를 돌릴 수 없다. 수집은 되지만 무엇이 바뀌었는지 알 수 없는 상태로 남는다.
+**`lsJoHstInf` 폴링이 준 새 MST 하나로 diff까지 간다.** 직전 MST는
+`lawService.do?target=oldAndNew` 의 `구조문_기본정보/법령일련번호` 가 준다.
 
-**탐색은 2026-08-19에 끝났다. 경로가 확인됐고 남은 것은 구현이다.**
+```bash
+regchange law previous --mst 285199   # 직전 MST 조회만
+regchange diff auto     --mst 285199  # 직전 MST 를 스스로 찾아 diff
+regchange diff manual --from-document-id ... --to-document-id ...  # 골든셋 재현
+```
 
-| 구분 | 항목 | 상태 |
-|---|---|---|
-| ~~탐색~~ | `oldAndNew` 본문 조회가 직전 MST를 주는가 | **완료.** `구조문_기본정보/법령일련번호`가 직전 버전이다. 표본 2건 확인 (`law-api-spec.md` §5.6.2) |
-| **구현** | `lsJoHstInf` 폴링 → `oldAndNew`로 직전 MST 확보 → `law` 본문 2벌 → 결정론적 diff | 미착수. 3단계 착수 전 |
-| **구현 전 확인** | 신구법이 없는 버전(제정 법령)의 응답, 시행령·전부개정·`현행여부=Y`에서의 거동 | 미확인 4건 (R-21 「남은 미확인」) |
-| 보류 | `lsHistory` 접근 불가의 원인 | 원인 미확인. **R-21 해소로 급하지 않다.** 확인하려면 사람이 신청 화면의 등록 상태를 본다 |
+**수동 지정 경로를 없애지 않았다.** 두 경로가 같은 `compute_change_set` 을 통과하고,
+어느 쪽으로 왔는지는 `change_set.mst_resolution_source`(RESOLVED / MANUAL / MISMATCH)로
+구별된다.
 
-규모가 0.7단계보다 작을 것이라는 예상은 맞았다 — 호출 5회로 끝났다.
+**해소가 위험을 없앤 것이 아니라 종류를 바꿨다.** 직전 MST를 잘못 고르면 diff가 조용히
+틀린 결과를 낸다 — 예외도 경고도 없고 결과는 그럴듯하다. 탐지 네 장치(법령ID 일치 /
+공포일자 순서 / 연속성 / 변경 규모)를 함께 넣었고, 전부 발화시키는 테스트가
+`tests/integration/test_autodiff_detection.py` 에 있다. 상세는 R-21.
+
+**남은 미확인**: 표본 2건이 같은 법령·같은 해다. 시행령·전부개정·`현행여부=Y` 에서도
+같은지는 미확인이며, 운영 중 `mst_resolution_source` 분포로 드러난다.

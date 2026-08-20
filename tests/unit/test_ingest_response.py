@@ -385,6 +385,7 @@ CORRECT_SPEC_BY_FIXTURE = {
     "oldandnew_search_000030.xml": OLD_AND_NEW_SEARCH,
     "oldandnew_000030_mst285199.xml": OLD_AND_NEW_DOCUMENT,
     "oldandnew_000030_mst283843.xml": OLD_AND_NEW_DOCUMENT,
+    "oldandnew_288527_enacted.xml": OLD_AND_NEW_DOCUMENT,
 }
 
 
