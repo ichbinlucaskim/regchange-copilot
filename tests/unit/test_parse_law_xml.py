@@ -6,6 +6,7 @@
 실패 유형은 여기서만 잡을 수 있다.
 """
 
+import datetime as dt
 from pathlib import Path
 
 import pytest
@@ -333,3 +334,50 @@ def test_missing_ministry_element_yields_none_not_empty_string() -> None:
     document = parse_law_document(xml)
     assert document.ministry is None
     assert document.ministry_code is None
+
+
+def test_promulgation_number_is_read() -> None:
+    """공포번호를 읽는다. 같은 날 두 번 공포된 사례가 실측 48건 있다 (edge-case #18)."""
+    document = parse_law_document(FIXTURES / "law_009244_mst215971_v20200324.xml")
+    assert document.promulgation_date == dt.date(2020, 3, 24)
+    assert document.promulgation_no == "17113"
+
+
+def test_article_effective_date_string_is_kept_raw_not_parsed() -> None:
+    """`조문시행일자문자열`을 원문 그대로 보관한다. 해석하지 않는다.
+
+    입도가 조문 단위보다 잘고(항/호/단서) 자유 텍스트라, 파싱하면 ADR-007 의 PARSED
+    등급이 된다. 그 등급의 값을 bitemporal 의 핵심 축에 넣을 수 없다.
+    """
+    document = parse_law_document(FIXTURES / "law_010199_mst280277.xml")
+
+    assert document.article_effective_dates_raw == "20251216:제42조제3항,제42조의2제1항"
+    assert document.has_article_level_effective_dates is True
+
+
+def test_body_api_carries_article_level_effective_dates_that_tags_flatten() -> None:
+    """**조문별 시행일 분기가 본문 API 에 있는데 조문 단위 태그에는 없다** (edge-case #8 정정).
+
+    이 테스트가 고정하는 것: `<조문시행일자>` 태그는 문서 시행일자로 평탄화되지만,
+    `<기본정보><조문시행일자문자열>` 은 분기를 요약 문자열로 담는다는 사실.
+    "본문에서는 분기가 관측되지 않는다"는 서술이 부정확했고, 그 부정확이
+    valid_from 결정의 전제였다.
+    """
+    document = parse_law_document(FIXTURES / "law_010199_mst280277.xml")
+
+    effective_dates = {unit.effective_date for unit in document.articles}
+    assert effective_dates == {dt.date(2026, 12, 17)}, "조문 단위 태그는 평탄화되어 있다"
+    assert document.document_effective_date == dt.date(2026, 12, 17)
+
+    # 그런데 요약 문자열은 다른 날짜를 담고 있다 — 분기가 존재한다는 증거다.
+    assert document.article_effective_dates_raw is not None
+    assert "20251216" in document.article_effective_dates_raw
+    assert "20261217" not in document.article_effective_dates_raw
+
+
+def test_document_without_the_string_reports_no_article_level_divergence() -> None:
+    """필드가 없으면 분기 없음으로 읽는다. 파싱 없이 얻는 유일한 신호다."""
+    document = parse_law_document(FIXTURES / "law_009244_mst215971_v20200324.xml")
+
+    assert document.article_effective_dates_raw is None
+    assert document.has_article_level_effective_dates is False

@@ -27,6 +27,7 @@
     - 행정규칙(`AdmRulService`)은 파싱하지 않는다 (ADR-006, 3단계).
 """
 
+from regchange.parse.assemble import assemble_body
 from regchange.parse.law_xml import ParseError, parse_law_document
 from regchange.parse.models import (
     AmendmentMarker,
@@ -55,6 +56,7 @@ __all__ = [
     "NormalizedText",
     "ParseError",
     "UnitType",
+    "assemble_body",
     "normalize",
     "parse_law_document",
 ]

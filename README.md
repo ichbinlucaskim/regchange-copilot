@@ -148,6 +148,41 @@ src/regchange/
 
 ## 현재 단계
 
-**0단계 — 스캐폴딩.** 비즈니스 로직은 아직 없다. 법제처 API 호출, 조문 파서, diff 알고리즘,
-LangGraph 노드, DB 스키마, 실제 규제 조항 번호는 의도적으로 비어 있다. 검증 없이 쌓지
-않는다.
+**1단계 완료 — 수집·파싱·적재·차분.** 각 항목은 실측 또는 픽스처 채점과 함께 들어왔다.
+
+| 영역 | 상태 | 근거 |
+|---|---|---|
+| 법제처 API 호출 | 구현 | `ingest/`. 응답 형태 6종 분류, 완주 검사, 스냅샷 매니페스트 |
+| 조문 파서 | 구현 | `parse/`. 픽스처 채점 정확도 1.0000 |
+| DB 스키마·적재 | 구현 | `db/migrations/`, `store/`. bitemporal(원칙 6), 문서 단위 트랜잭션 |
+| 결정론적 조문 diff | 구현 | `diff/`. 이동 후보 포함, I/O 의존 없음(원칙 1) |
+| 도메인 선택 | 확정 | 12개월 전수 실측 — `docs/domain-selection/amendment-frequency.md`, ADR-008 |
+| 평가 골든셋 | 시나리오 15건 | `evals/datasets/golden/`. 문서 본문은 2-B에서 작성 |
+
+**아직 의도적으로 비어 있다**: 검색(`retrieval/`), LangGraph 노드·승인 interrupt(`graph/`),
+프롬프트(`prompts/`), 인용 검증(`verification/`), 킬 스위치(`guards/`), API(`api/`),
+발송 워커(`dispatch/`), 감사(`audit/`), Terraform. **검증 없이 쌓지 않는다** —
+각 항목은 평가 데이터셋 또는 원문 확인과 함께 들어온다.
+
+### R-21 해소 (2026-08-19) — 자동 diff 경로가 열렸다
+
+**`lsJoHstInf` 폴링이 준 새 MST 하나로 diff까지 간다.** 직전 MST는
+`lawService.do?target=oldAndNew` 의 `구조문_기본정보/법령일련번호` 가 준다.
+
+```bash
+regchange law previous --mst 285199   # 직전 MST 조회만
+regchange diff auto     --mst 285199  # 직전 MST 를 스스로 찾아 diff
+regchange diff manual --from-document-id ... --to-document-id ...  # 골든셋 재현
+```
+
+**수동 지정 경로를 없애지 않았다.** 두 경로가 같은 `compute_change_set` 을 통과하고,
+어느 쪽으로 왔는지는 `change_set.mst_resolution_source`(RESOLVED / MANUAL / MISMATCH)로
+구별된다.
+
+**해소가 위험을 없앤 것이 아니라 종류를 바꿨다.** 직전 MST를 잘못 고르면 diff가 조용히
+틀린 결과를 낸다 — 예외도 경고도 없고 결과는 그럴듯하다. 탐지 네 장치(법령ID 일치 /
+공포일자 순서 / 연속성 / 변경 규모)를 함께 넣었고, 전부 발화시키는 테스트가
+`tests/integration/test_autodiff_detection.py` 에 있다. 상세는 R-21.
+
+**남은 미확인**: 표본 2건이 같은 법령·같은 해다. 시행령·전부개정·`현행여부=Y` 에서도
+같은지는 미확인이며, 운영 중 `mst_resolution_source` 분포로 드러난다.

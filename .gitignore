@@ -39,3 +39,11 @@ evals/results/*
 # 집계 결과(data/frequency-summary.csv)만 커밋한다.
 data/frequency-cache/
 data/*.log
+
+# --- 2-A 골든셋 원문 스냅샷 ---------------------------------------------------
+# 법제처 응답 원본이며 응답 본문에 OC가 echo될 수 있다(마스킹 후 저장하지만 커밋 대상 아님).
+# scripts/analysis/collect_golden_sources.py 로 재수집하며, 매니페스트의 sha256으로
+# 그때 받은 것과 같은지 검증한다.
+data/snapshots/
+# 수집 리포트는 커밋한다 — efYd 소급 조회 실패 6건의 기록이며
+# docs/api-exploration/law-api-spec.md §3.2가 이 파일을 근거로 인용한다.

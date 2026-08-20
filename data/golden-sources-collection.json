@@ -1,0 +1,326 @@
+{
+  "run_id": "20260819T191219Z-8992",
+  "collected_at": "2026-08-19T19:12:19.448739+00:00",
+  "requested": 13,
+  "succeeded": 7,
+  "failed": [
+    {
+      "case": "amend-01",
+      "side": "before",
+      "law_id": "010199",
+      "law_name": "전자금융거래법",
+      "target": "eflaw",
+      "params": {
+        "MST": "280277",
+        "efYd": "20261216"
+      },
+      "note": "시행 20261217 직전. after 는 픽스처 law_010199_mst280277.xml",
+      "ok": false,
+      "reason": "RESPONSE_SHAPE",
+      "response_kind": "LAW_MESSAGE",
+      "detail": "법제처 안내 메시지: '일치하는 법령이 없습니다.  법령명을 확인하여 주십시오.'. 파라미터가 틀렸다. 재시도해도 같다",
+      "request_count": 1
+    },
+    {
+      "case": "amend-04",
+      "side": "before",
+      "law_id": "000030",
+      "law_name": "정보통신망 이용촉진 및 정보보호 등에 관한 법률",
+      "target": "eflaw",
+      "params": {
+        "MST": "282481",
+        "efYd": "20260706"
+      },
+      "note": "시행 20260707 직전",
+      "ok": false,
+      "reason": "RESPONSE_SHAPE",
+      "response_kind": "LAW_MESSAGE",
+      "detail": "법제처 안내 메시지: '일치하는 법령이 없습니다.  법령명을 확인하여 주십시오.'. 파라미터가 틀렸다. 재시도해도 같다",
+      "request_count": 1
+    },
+    {
+      "case": "amend-06",
+      "side": "before",
+      "law_id": "000030",
+      "law_name": "정보통신망 이용촉진 및 정보보호 등에 관한 법률",
+      "target": "eflaw",
+      "params": {
+        "MST": "285199",
+        "efYd": "20260930"
+      },
+      "note": "시행 20261001 직전. amend-05(시행 20260911) 반영 상태여야 한다 — 대조 가능",
+      "ok": false,
+      "reason": "RESPONSE_SHAPE",
+      "response_kind": "LAW_MESSAGE",
+      "detail": "법제처 안내 메시지: '일치하는 법령이 없습니다.  법령명을 확인하여 주십시오.'. 파라미터가 틀렸다. 재시도해도 같다",
+      "request_count": 1
+    },
+    {
+      "case": "amend-11",
+      "side": "before",
+      "law_id": "011357",
+      "law_name": "개인정보 보호법",
+      "target": "eflaw",
+      "params": {
+        "MST": "283839",
+        "efYd": "20260910"
+      },
+      "note": "시행 20260911 직전. 픽스처(MST=270351, 시행 20251002)와 대조하는 대조군",
+      "ok": false,
+      "reason": "RESPONSE_SHAPE",
+      "response_kind": "LAW_MESSAGE",
+      "detail": "법제처 안내 메시지: '일치하는 법령이 없습니다.  법령명을 확인하여 주십시오.'. 파라미터가 틀렸다. 재시도해도 같다",
+      "request_count": 1
+    },
+    {
+      "case": "amend-14",
+      "side": "before",
+      "law_id": "011468",
+      "law_name": "개인정보 보호법 시행령",
+      "target": "eflaw",
+      "params": {
+        "MST": "283503",
+        "efYd": "20260819"
+      },
+      "note": "시행 20260820 직전",
+      "ok": false,
+      "reason": "RESPONSE_SHAPE",
+      "response_kind": "LAW_MESSAGE",
+      "detail": "법제처 안내 메시지: '일치하는 법령이 없습니다.  법령명을 확인하여 주십시오.'. 파라미터가 틀렸다. 재시도해도 같다",
+      "request_count": 1
+    },
+    {
+      "case": "amend-17",
+      "side": "before",
+      "law_id": "001540",
+      "law_name": "신용정보의 이용 및 보호에 관한 법률",
+      "target": "eflaw",
+      "params": {
+        "MST": "285955",
+        "efYd": "20260812"
+      },
+      "note": "시행 20260813 직전",
+      "ok": false,
+      "reason": "RESPONSE_SHAPE",
+      "response_kind": "LAW_MESSAGE",
+      "detail": "법제처 안내 메시지: '일치하는 법령이 없습니다.  법령명을 확인하여 주십시오.'. 파라미터가 틀렸다. 재시도해도 같다",
+      "request_count": 1
+    }
+  ],
+  "records": [
+    {
+      "case": "amend-01",
+      "side": "before",
+      "law_id": "010199",
+      "law_name": "전자금융거래법",
+      "target": "eflaw",
+      "params": {
+        "MST": "280277",
+        "efYd": "20261216"
+      },
+      "note": "시행 20261217 직전. after 는 픽스처 law_010199_mst280277.xml",
+      "ok": false,
+      "reason": "RESPONSE_SHAPE",
+      "response_kind": "LAW_MESSAGE",
+      "detail": "법제처 안내 메시지: '일치하는 법령이 없습니다.  법령명을 확인하여 주십시오.'. 파라미터가 틀렸다. 재시도해도 같다",
+      "request_count": 1
+    },
+    {
+      "case": "amend-04",
+      "side": "after",
+      "law_id": "000030",
+      "law_name": "정보통신망 이용촉진 및 정보보호 등에 관한 법률",
+      "target": "law",
+      "params": {
+        "MST": "282481"
+      },
+      "note": "공포 20260106 제21305호 일부개정 / 시행 20260707 / 조문 26 (본조신설 16)",
+      "ok": true,
+      "directory": "20260819T190817Z-5b64/law/MST-282481-7af929",
+      "pages": 1,
+      "items": 172,
+      "reused": true
+    },
+    {
+      "case": "amend-04",
+      "side": "before",
+      "law_id": "000030",
+      "law_name": "정보통신망 이용촉진 및 정보보호 등에 관한 법률",
+      "target": "eflaw",
+      "params": {
+        "MST": "282481",
+        "efYd": "20260706"
+      },
+      "note": "시행 20260707 직전",
+      "ok": false,
+      "reason": "RESPONSE_SHAPE",
+      "response_kind": "LAW_MESSAGE",
+      "detail": "법제처 안내 메시지: '일치하는 법령이 없습니다.  법령명을 확인하여 주십시오.'. 파라미터가 틀렸다. 재시도해도 같다",
+      "request_count": 1
+    },
+    {
+      "case": "amend-05",
+      "side": "after",
+      "law_id": "000030",
+      "law_name": "정보통신망 이용촉진 및 정보보호 등에 관한 법률",
+      "target": "law",
+      "params": {
+        "MST": "283843"
+      },
+      "note": "공포 20260310 제21445호 타법개정 / 시행 20260911 / 제45조의3 1건",
+      "ok": true,
+      "directory": "20260819T190817Z-5b64/law/MST-283843-647e25",
+      "pages": 1,
+      "items": 172,
+      "reused": true
+    },
+    {
+      "case": "amend-06",
+      "side": "after",
+      "law_id": "000030",
+      "law_name": "정보통신망 이용촉진 및 정보보호 등에 관한 법률",
+      "target": "law",
+      "params": {
+        "MST": "285199"
+      },
+      "note": "공포 20260331 제21500호 일부개정 / 시행 20261001 / 조문 26",
+      "ok": true,
+      "directory": "20260819T190817Z-5b64/law/MST-285199-93c45e",
+      "pages": 1,
+      "items": 181,
+      "reused": true
+    },
+    {
+      "case": "amend-06",
+      "side": "before",
+      "law_id": "000030",
+      "law_name": "정보통신망 이용촉진 및 정보보호 등에 관한 법률",
+      "target": "eflaw",
+      "params": {
+        "MST": "285199",
+        "efYd": "20260930"
+      },
+      "note": "시행 20261001 직전. amend-05(시행 20260911) 반영 상태여야 한다 — 대조 가능",
+      "ok": false,
+      "reason": "RESPONSE_SHAPE",
+      "response_kind": "LAW_MESSAGE",
+      "detail": "법제처 안내 메시지: '일치하는 법령이 없습니다.  법령명을 확인하여 주십시오.'. 파라미터가 틀렸다. 재시도해도 같다",
+      "request_count": 1
+    },
+    {
+      "case": "amend-11",
+      "side": "after",
+      "law_id": "011357",
+      "law_name": "개인정보 보호법",
+      "target": "law",
+      "params": {
+        "MST": "283839"
+      },
+      "note": "공포 20260310 제21445호 일부개정 / 시행 20260911 / 조문 19",
+      "ok": true,
+      "directory": "20260819T190817Z-5b64/law/MST-283839-3e5f30",
+      "pages": 1,
+      "items": 141,
+      "reused": true
+    },
+    {
+      "case": "amend-11",
+      "side": "before",
+      "law_id": "011357",
+      "law_name": "개인정보 보호법",
+      "target": "eflaw",
+      "params": {
+        "MST": "283839",
+        "efYd": "20260910"
+      },
+      "note": "시행 20260911 직전. 픽스처(MST=270351, 시행 20251002)와 대조하는 대조군",
+      "ok": false,
+      "reason": "RESPONSE_SHAPE",
+      "response_kind": "LAW_MESSAGE",
+      "detail": "법제처 안내 메시지: '일치하는 법령이 없습니다.  법령명을 확인하여 주십시오.'. 파라미터가 틀렸다. 재시도해도 같다",
+      "request_count": 1
+    },
+    {
+      "case": "amend-14",
+      "side": "after",
+      "law_id": "011468",
+      "law_name": "개인정보 보호법 시행령",
+      "target": "law",
+      "params": {
+        "MST": "283503"
+      },
+      "note": "공포 20260219 제36121호 일부개정 / 시행 20260820 / 조문 9",
+      "ok": true,
+      "directory": "20260819T190817Z-5b64/law/MST-283503-328eaf",
+      "pages": 1,
+      "items": 151,
+      "reused": true
+    },
+    {
+      "case": "amend-14",
+      "side": "before",
+      "law_id": "011468",
+      "law_name": "개인정보 보호법 시행령",
+      "target": "eflaw",
+      "params": {
+        "MST": "283503",
+        "efYd": "20260819"
+      },
+      "note": "시행 20260820 직전",
+      "ok": false,
+      "reason": "RESPONSE_SHAPE",
+      "response_kind": "LAW_MESSAGE",
+      "detail": "법제처 안내 메시지: '일치하는 법령이 없습니다.  법령명을 확인하여 주십시오.'. 파라미터가 틀렸다. 재시도해도 같다",
+      "request_count": 1
+    },
+    {
+      "case": "amend-16",
+      "side": "after",
+      "law_id": "001540",
+      "law_name": "신용정보의 이용 및 보호에 관한 법률",
+      "target": "law",
+      "params": {
+        "MST": "283841"
+      },
+      "note": "공포 20260310 제21445호 타법개정 / 시행 20260911 / 제20조 1건",
+      "ok": true,
+      "directory": "20260819T190817Z-5b64/law/MST-283841-395d25",
+      "pages": 1,
+      "items": 103,
+      "reused": true
+    },
+    {
+      "case": "amend-17",
+      "side": "after",
+      "law_id": "001540",
+      "law_name": "신용정보의 이용 및 보호에 관한 법률",
+      "target": "law",
+      "params": {
+        "MST": "285955"
+      },
+      "note": "공포 20260512 제21646호 일부개정 / 시행 20260813 / 제44조의2~5 전부 본조신설",
+      "ok": true,
+      "directory": "20260819T190817Z-5b64/law/MST-285955-900b84",
+      "pages": 1,
+      "items": 108,
+      "reused": true
+    },
+    {
+      "case": "amend-17",
+      "side": "before",
+      "law_id": "001540",
+      "law_name": "신용정보의 이용 및 보호에 관한 법률",
+      "target": "eflaw",
+      "params": {
+        "MST": "285955",
+        "efYd": "20260812"
+      },
+      "note": "시행 20260813 직전",
+      "ok": false,
+      "reason": "RESPONSE_SHAPE",
+      "response_kind": "LAW_MESSAGE",
+      "detail": "법제처 안내 메시지: '일치하는 법령이 없습니다.  법령명을 확인하여 주십시오.'. 파라미터가 틀렸다. 재시도해도 같다",
+      "request_count": 1
+    }
+  ]
+}

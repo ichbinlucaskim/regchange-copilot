@@ -22,6 +22,8 @@ from regchange.ingest.response import (
     LAW_DOCUMENT,
     LAW_SEARCH,
     LS_HISTORY,
+    OLD_AND_NEW_DOCUMENT,
+    OLD_AND_NEW_SEARCH,
     SPECS,
     ClassifiedFailure,
     ClassifiedOk,
@@ -380,6 +382,10 @@ CORRECT_SPEC_BY_FIXTURE = {
     "eflaw_009256_mst261379_ef20240627.xml": EFLAW_DOCUMENT,
     "eflaw_009256_mst261379_ef20240719.xml": EFLAW_DOCUMENT,
     "eflaw_009244_mst283365_ef20260820_pending.xml": EFLAW_DOCUMENT,
+    "oldandnew_search_000030.xml": OLD_AND_NEW_SEARCH,
+    "oldandnew_000030_mst285199.xml": OLD_AND_NEW_DOCUMENT,
+    "oldandnew_000030_mst283843.xml": OLD_AND_NEW_DOCUMENT,
+    "oldandnew_288527_enacted.xml": OLD_AND_NEW_DOCUMENT,
 }
 
 
