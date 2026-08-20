@@ -383,6 +383,51 @@ EFLAW_DOCUMENT: Final = TargetSpec(
 )
 """시행일 법령 본문. 근거: `eflaw_*.xml` 4종. 같은 MST가 `efYd`마다 다른 응답을 낸다."""
 
+OLD_AND_NEW_SEARCH: Final = TargetSpec(
+    key="old_and_new_search",
+    target="oldAndNew",
+    endpoint="lawSearch.do",
+    family=ResponseFamily.SEARCH,
+    root_tag="OldAndNewLawSearch",
+    item_path="oldAndNew",
+    required_params=frozenset({"query"}),
+    identity_path="신구법일련번호",
+    law_id_path="신구법ID",
+)
+"""신구법 비교 목록. 근거: `oldandnew_search_000030.xml` (2026-08-19 실측).
+
+**봉투 8필드(`target`~`resultMsg`)는 `LawSearch`와 동일한데 루트 태그와 항목 요소만
+다르다.** `resultCode`가 있으므로 검색 계열이다.
+
+`신구법일련번호`가 곧 MST다 — `신구법상세링크`가
+`lawService.do?target=oldAndNew&MST=<신구법일련번호>` 형태다.
+
+**버전 목록이 아니다.** 법령당 현행 신구법 1건만 준다(§5.6.1). 과거 버전 열거에는
+쓸 수 없다."""
+
+OLD_AND_NEW_DOCUMENT: Final = TargetSpec(
+    key="old_and_new_document",
+    target="oldAndNew",
+    endpoint="lawService.do",
+    family=ResponseFamily.DOCUMENT,
+    root_tag="OldAndNewService",
+    item_path="신조문목록/조문",
+    required_params=frozenset({"MST"}),
+)
+"""신구법 비교 본문. 근거: `oldandnew_000030_mst285199.xml`, `oldandnew_000030_mst283843.xml`.
+
+**`구조문_기본정보/법령일련번호`가 요청한 MST의 직전 버전이다** (표본 2건에서 확인,
+§5.6.2). `lsJoHstInf` 폴링이 주는 새 MST 하나로 비교 대상을 특정할 수 있다 — R-21.
+
+**`item_path`의 `조문`은 조문이 아니라 대비표의 행이다.** `no` 속성이 행 번호이고
+조문키·조문번호가 없으며, 본문에 `(생 략)`·`(현행과 같음)`·`<신 설>` 생략 표기와
+`<P>` 강조 구간이 섞인다. **전문이 아니므로 원문 소스로 쓰지 않는다** — 원문은
+`LAW_DOCUMENT`로 받는다 (§5.6.3).
+
+`article_path`를 두지 않은 이유: 이 응답에는 우리가 아는 의미의 조문 트리가 없다.
+행 목록에 `article_path`를 걸면 `articles`가 조문인 것처럼 보이고, 하류가 그것을
+조문키와 대응시키려 한다."""
+
 JO_HISTORY_BY_DATE: Final = TargetSpec(
     key="jo_history_by_date",
     target="lsJoHstInf",

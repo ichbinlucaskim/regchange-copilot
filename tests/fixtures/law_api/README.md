@@ -78,6 +78,17 @@
 | `search_law_teukgeum.xml` | 법령 목록 검색 정상 응답. 법률과 시행령이 함께 반환된다 |
 | `search_eflaw_teukgeum.xml` | 시행일 법령 목록. `현행연혁코드`에 `현행`/`연혁`/`시행예정` 세 값이 모두 등장. **totalCnt=81인데 10건만 담긴 잘림 사례**(`numOfRows=10`) — 세 값이 "모두 등장한다"는 것은 이 10건 안에서의 관측이며, 어휘가 이 3종뿐이라는 근거는 아니다 |
 
+### 신구법 비교 (target=oldAndNew) — 2026-08-19 수집
+
+수집 스크립트: `scripts/exploration/probe_history_api.py`. 구조 확정은
+`docs/api-exploration/law-api-spec.md` §5.6, 배경은 R-21(`docs/04-risk-register.md`).
+
+| 파일 | 무엇을 보여주는 사례인가 |
+|---|---|
+| `oldandnew_search_000030.xml` | 신구법 **목록** 조회. 루트가 `OldAndNewLawSearch`, 항목이 `oldAndNew`로 다른데 **봉투 8필드는 `LawSearch`와 동일**하다. `totalCnt=3`(법률·시행령·시행규칙 각 1건, 전부 수신 — 잘림 없음). **버전 목록이 아니라 법령당 현행 신구법 1건**이라는 것이 요점 |
+| `oldandnew_000030_mst285199.xml` | 신구법 **본문** 조회(정보통신망법 2026-03-31 일부개정). **`구조문_기본정보/법령일련번호=283843`으로 직전 MST를 직접 준다** — R-21 해소 근거. 대비표 125행, `<P>` 강조 구간과 `(생 략)`/`(현행과 같음)` 생략 표기 포함 |
+| `oldandnew_000030_mst283843.xml` | 같은 API, 타법개정 1건짜리(정보통신망법 2026-03-10). 구조문=282481로 **직전 MST 규칙이 두 번째 표본에서도 성립**한다. 전체 8행 중 실질 변경이 `제31조제2항`→`제31조제4항` 한 줄뿐이어서 **`evals/datasets/golden/case-003.yaml`의 독립 근거**가 된다 |
+
 ### 에러·경계 응답
 
 | 파일 | 무엇을 보여주는 사례인가 |
@@ -86,5 +97,6 @@
 | `error_law_bad_mst.xml` | 존재하지 않는 MST. `<Law>일치하는 법령이 없습니다...</Law>`, **resultCode 없음**, 인코딩 선언 소문자 |
 | `error_admrul_wrong_id_param.xml` | 행정규칙 ID 파라미터에 행정규칙**ID**를 넣은 경우(정답은 행정규칙**일련번호**). 실패 메시지가 "행정규칙명을 확인하여 주십시오"로 오도한다 |
 | `error_unknown_target_empty.xml` | 알 수 없는 target. **HTTP 200 + 본문 0바이트.** 파일 크기가 0인 것이 정상이다 |
-| `error_target_lsHistory.html` | 미신청 target(`lsHistory`). **HTTP 200 + HTML 안내 페이지.** XML 파서에 그대로 넣으면 깨진다 |
+| `error_target_lsHistory.html` | 접근 불가 target(`lsHistory`). **HTTP 200 + HTML 안내 페이지.** XML 파서에 그대로 넣으면 깨진다. 문구는 "…본문에 대한 접근입니다" / "등록된 API 선택 후 법령종류를 체크해 주세요"라는 **일반 안내**이며 원인을 특정하지 않는다 — 이것을 "미신청"으로 단정했다가 정정했다 (R-21 정정 이력) |
+| `error_lshistory_000030.html` | 위와 같은 응답의 **2026-08-19 재확인**. 활용가이드가 확정한 `target=lsHistory`를 그대로 써도 결과가 같다는 것이 요점. 발췌 저장이라 전문이 아니다 |
 | `error_dayjochg_id_only_zero.xml` | 일자별 조문 개정 이력에 `ID`만 준 경우. `resultCode` 없이 `totalCnt=0`만 반환 — 파라미터 오류와 진짜 0건이 구별되지 않는다 |
