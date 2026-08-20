@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  일일 작업 스케줄 — launchd (macOS).
+
+  `__REPO_ROOT__` 는 `scripts/ops/install_launchd.sh` 가 치환한다. 템플릿을 커밋하고
+  실제 plist 는 커밋하지 않는 이유: 절대 경로는 사람마다 다르고, 커밋된 경로는
+  다른 기계에서 조용히 틀린다.
+
+  StartCalendarInterval 에는 **타임존 옵션이 없다.** 값은 언제나 기계의 로컬 시각으로
+  해석된다. 우리가 걸고 싶은 것은 07:00 KST 이므로(법제처가 등재하는 달력이 KST 다),
+  설치 스크립트가 **설치 시점에 07:00 KST 를 로컬 시각으로 환산해** 아래 Hour/Minute 를
+  채운다. 기계의 타임존이나 서머타임이 바뀌면 재설치해야 한다.
+
+  **환산이 틀려도 데이터는 틀리지 않는다.** 폴링 창은 KST 달력으로 계산되고(어제부터
+  N일) 최근 N일을 재확인하므로, 실행 시각은 "얼마나 빨리 알아채는가"에만 영향을 준다.
+  그래서 이 환산을 실패 지점이 아니라 편의로 다룬다.
+
+  RunAtLoad 를 false 로 둔다. true 면 로그인·재부팅마다 한 번씩 더 도는데, 멱등성이
+  있어 데이터는 망가지지 않지만 실행 이력에 의미 없는 행이 쌓인다.
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.regchange.daily</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>__REPO_ROOT__/scripts/ops/daily_ingest.sh</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>__REPO_ROOT__</string>
+
+    <!-- 07:00 KST 를 로컬 시각으로 환산한 값. 법제처 등재 시각을 모르므로 한국
+         시각 아침이 무난하고, 등재가 늦으면 다음 실행의 최근 N일 재확인이 회수한다. -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>__HOUR__</integer>
+        <key>Minute</key>
+        <integer>__MINUTE__</integer>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <false/>
+
+    <!-- 래퍼가 자체 로그 파일을 쓴다. 여기 남는 것은 래퍼조차 실행되지 못한
+         경우의 흔적(권한 오류 등)이다. -->
+    <key>StandardOutPath</key>
+    <string>__REPO_ROOT__/data/ops-logs/launchd.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>__REPO_ROOT__/data/ops-logs/launchd.err.log</string>
+
+    <key>ProcessType</key>
+    <string>Background</string>
+</dict>
+</plist>

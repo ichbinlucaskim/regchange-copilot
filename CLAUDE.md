@@ -314,10 +314,13 @@ src/regchange/
 ├─ guards/        킬 스위치, 스키마 강제, 인용 폐기 [원칙 2, 5]
 ├─ api/           FastAPI 진입점
 ├─ dispatch/      승인 레코드만 보고 동작하는 발송 워커 [원칙 5]
+├─ ops/           일일 작업·실행 이력·조회 명령        [ADR-014]
 └─ audit/         감사 로그와 재현
 ```
 
 - `diff`, `temporal`, `verification` 은 I/O 의존성을 갖지 않는다.
+- `pipeline` 은 **한 건을 어떻게 처리하는가**를, `ops` 는 **매일 무엇을 얼마나 도는가**를
+  조립한다. 스케줄·재확인 창·실패 격리·실행 이력은 후자다.
 - `dispatch` 는 `graph`, `prompts`, `llm` 어댑터를 import 하지 않는다. 이 방향 의존이
   생기면 원칙 5가 무너진 것이다.
 
@@ -334,15 +337,19 @@ make lint       # ruff check
 make fmt        # ruff format + --fix
 make typecheck  # mypy strict
 make test       # pytest
+
+make ops-run       # 일일 작업 1회 (cron 과 같은 경로)
+make ops-install   # launchd 등록 (매일 07:00 KST)
+make ops-summary   # 운영 실적 — 실행일 / 실패일 / 미실행일 / 총 포착
 ```
 
 ---
 
 ## 10. 현재 단계
 
-**수집 · 파싱 · 적재까지 구현됐다.** 아래는 아직 의도적으로 비어 있다:
+**수집 · 파싱 · 적재 · 차분이 구현됐고, 2026-08-20부터 매일 자동 실행된다** (ADR-014).
+아래는 아직 의도적으로 비어 있다:
 
-- diff 알고리즘
 - LangGraph 노드·상태 정의
 - Terraform 코드
 - 실제 규제 조항 번호와 법령 문구 (원문 미확인)
@@ -354,6 +361,9 @@ make test       # pytest
 - DB 스키마와 적재 — `db/migrations/`, `store/`. 조문 `valid_from` 은 일자별 이력
   API 결합 전까지 NULL(`PENDING_HISTORY`)이며, 본문의 조문시행일자를 승격하지 않는다
   (edge-case #8, ADR-005)
+- 결정론적 조문 diff — `diff/`, `store/changeset.py`. I/O 의존 없음 (원칙 1)
+- 일일 운영 — `ops/`. **실패한 실행도 행으로 남긴다** — "실패한 날"과 "실행하지 않은
+  날"은 다른 사실이며 조치도 다르다. 실적 주장의 근거는 로그가 아니라 질의다
 
 **검증 없이 쌓지 않는다.** 위 항목을 채우는 것은 1단계 이후의 일이며, 각각 원문 확인 또는
 평가 데이터셋과 함께 들어온다.

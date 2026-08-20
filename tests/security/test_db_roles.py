@@ -230,3 +230,39 @@ async def test_every_role_can_actually_connect(role_connect: RoleConnect, role: 
         row = await cur.fetchone()
     assert row is not None
     assert row[0] == role.value
+
+
+# ---------------------------------------------------------------------------
+# ops_run / ops_law_outcome — 운영 실행 이력 (ADR-014)
+# ---------------------------------------------------------------------------
+
+
+async def test_ingest_role_can_record_its_own_runs(role_connect: RoleConnect) -> None:
+    """수집 경로가 실행 이력을 남길 수 있어야 한다. 못 남기면 실적이 사라진다."""
+    conn = await role_connect(DbRole.INGEST)
+    async with conn.cursor() as cur:
+        await cur.execute("SELECT count(*) FROM ops_run")
+        assert await cur.fetchone() is not None
+    await conn.rollback()
+
+
+async def test_ops_history_cannot_be_rewritten(role_connect: RoleConnect) -> None:
+    """**운영 실적은 사후에 고칠 수 없다.**
+
+    "N일 운영, K일 실패"가 주장이 되려면 그 행을 나중에 손댈 수 없어야 한다.
+    수집 role 에는 UPDATE/DELETE 권한 자체가 없다.
+    """
+    conn = await role_connect(DbRole.INGEST)
+    await _expect_denied(conn, "UPDATE ops_run SET status = 'SUCCEEDED'")
+    await _expect_denied(conn, "DELETE FROM ops_run")
+
+
+async def test_dispatch_role_cannot_read_operations_history(role_connect: RoleConnect) -> None:
+    """발송 워커의 시야가 새 테이블이 생겼다는 이유로 넓어지지 않는다.
+
+    마이그레이션 003 이 app_dispatch 에 DEFAULT PRIVILEGES 를 주지 않기로 한
+    결정이 실제로 지켜지는지 본다 — 새 테이블마다 이 검사가 필요하다.
+    """
+    conn = await role_connect(DbRole.DISPATCH)
+    await _expect_denied(conn, "SELECT * FROM ops_run")
+    await _expect_denied(conn, "SELECT * FROM ops_law_outcome")

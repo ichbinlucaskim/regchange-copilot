@@ -62,6 +62,115 @@
 
 ---
 
+## 5-1. 일일 작업 (로컬 운영) — ADR-014
+
+이 절만 절차가 채워져 있다. 실제로 도는 유일한 자동 작업이기 때문이다.
+
+### 무엇이 도는가
+
+```
+매일 07:00 KST  launchd(com.regchange.daily)
+  → scripts/ops/daily_ingest.sh
+    → regchange ops daily --days 7
+      카나리아 → regDt 폴링(어제부터 7일) → 코퍼스 필터
+      → 본문 수집·적재 → 직전 MST 확보 → diff → ops_run 기록
+```
+
+로그: `data/ops-logs/daily-YYYYMM.log` (월 단위). **1차 기록은 `ops_run` 테이블**이고
+이 파일은 프로세스가 죽어 행조차 못 남긴 경우의 흔적이다.
+
+### 어떻게 알아차리는가
+
+```bash
+make ops-summary          # 운영 일수 / 성공·실패·미실행 일수 / 총 포착
+make ops-history          # 최근 30일, 실패한 법령과 사유까지
+make ops-alerts           # MISMATCH · 변경규모 초과 · 연속 0건 · 카나리아 실패
+```
+
+### 상태별 판단 기준
+
+| 상태 | 뜻 | 조치 |
+|---|---|---|
+| `SUCCEEDED` | 새로 포착한 개정이 있고 실패 없음 | 없음 |
+| `SUCCEEDED_ZERO` | 코퍼스 대상 개정 0건 | **정상이다.** 12개월 실측에서 코퍼스 개정일은 365일 중 14일이다 |
+| `PARTIAL` | 일부 날짜/법령 실패 | `ops history` 로 사유 확인. **다음 실행이 자동 재시도한다** |
+| `FAILED` | 폴링한 날짜가 전부 실패 | API 상태 확인. 지속되면 `docs/incidents/` 기록 |
+| `SKIPPED_CANARY_FAILED` | 카나리아 실패로 **수집하지 않음** | 우리 실패가 아니다. 그날 데이터가 없는 이유가 기록돼 있다 |
+
+### 실패했을 때
+
+1. **재시도를 늘리지 않는다.** 기록이 우선이다. 실패한 법령은 다음 실행이 다시 시도한다.
+2. 특정 날짜만 다시 돌리려면: `uv run regchange ops daily --date 20260819`
+3. 원인이 새로운 것이면 `docs/incidents/` 에 추가한다.
+
+### 며칠 비었을 때
+
+노트북이 꺼져 있었으면 실행 기록이 없다. 7일 이내면 다음 실행이 자동 회수한다.
+그보다 길면 창을 명시적으로 넓힌다:
+
+```bash
+uv run regchange ops daily --days 21
+```
+
+`ops summary` 의 **미실행일**이 그 공백을 계속 보고한다. 숨기지 않는다.
+
+### launchd 등록·해제·확인
+
+```bash
+make ops-install                                        # 등록 (07:00 KST → 로컬 시각 환산)
+launchctl print gui/$(id -u)/com.regchange.daily | grep 'last exit code'
+launchctl kickstart -k gui/$(id -u)/com.regchange.daily # 지금 한 번 돌리기
+make ops-uninstall                                      # 해제
+```
+
+### 첫날 실패의 두 원인
+
+1. **macOS 보호 디렉터리 (exit 126, `Operation not permitted`).**
+   저장소가 `~/Documents` · `~/Desktop` · `~/Downloads` 아래에 있으면 launchd 가 띄운
+   프로세스는 그 안의 스크립트를 **실행하지 못한다**(TCC). 파일 읽기는 되는데 실행만
+   막히므로 원인이 보이지 않는다. 해소는 둘 중 하나다 —
+   - 시스템 설정 > 개인정보 보호 및 보안 > **전체 디스크 접근 권한**에 `/bin/bash` 추가
+     (`+` > `Cmd+Shift+G` > `/bin/bash`)
+   - 저장소를 보호 디렉터리 밖으로 옮긴다 (예: `~/dev/`)
+
+   `make ops-install` 이 이 조건을 감지해 경고한다.
+
+2. **환경 미상속.** launchd 는 셸 환경을 상속하지 않는다. `.env` 는 파이썬이 직접
+   읽으므로(`regchange.config.settings`) 셸에서 export 할 필요가 없고, `PATH` 와 작업
+   디렉터리는 래퍼 스크립트가 고정한다. **수동 실행이 되는데 launchd 만 실패하면
+   1번을 먼저 의심한다.**
+
+### 타임존 — 세 개의 시계를 구별한다
+
+| 무엇 | 어느 시계 | 이유 |
+|---|---|---|
+| 기록 (`ops_run`, `run_id`, `fetched_at`) | **UTC** | 어디서 돌려도 같아야 정렬이 단조롭다 |
+| 법령 날짜 (`regDt`, 공포일자, 시행일자) | **원본 8자리** | 법제처가 준 값이다. 변환하지 않는다 |
+| 표시·일수 집계 (`ops summary` 의 실행일) | **KST** | 운영자가 검증할 수 있는 달력은 자기가 사는 달력이다 |
+| 스케줄 (`StartCalendarInterval`) | **기계 로컬** | launchd 에 타임존 옵션이 **없다** |
+
+**이 기계는 `America/Los_Angeles` 다.** 그래서 `make ops-install` 은 07:00 KST 를
+로컬 시각으로 환산해(현재 15:00 PDT) plist 에 넣는다.
+
+주의할 것:
+
+- **타임존이 바뀌면 재설치한다.** `make ops-install` 을 다시 돌리면 된다.
+- **DST 전환 시 한 시간 어긋난다.** PDT→PST 전환에서 07:00 KST 가 14:00 이 되지만
+  plist 에는 15:00 이 남는다. 재설치 전까지 한 시간 늦게 돈다.
+
+**둘 다 데이터를 틀리게 하지 않는다. 그것은 우연이 아니라 설계의 결과다.**
+
+폴링 창은 실행 시각이 아니라 **KST 달력**에서 계산되고(`OPS_CALENDAR_OFFSET`),
+어제부터 **7일을 재확인**한다. 실행이 한 시간 늦거나 심지어 하루 밀려도 그날의 창이
+전날들을 다시 덮으므로 포착 대상이 빠지지 않는다. 환산 오차가 영향을 주는 것은
+**"얼마나 빨리 알아채는가"** 뿐이다.
+
+바꿔 말하면 **재확인 창이 스케줄 정확도에 대한 의존을 흡수한다.** 창을 1일로 줄이면
+이 성질이 사라지고, 그때는 환산 오차가 곧 누락이 된다 — `--days` 기본값을 낮출 때
+이 문장을 먼저 읽는다.
+
+---
+
 ## 6. 배포와 롤백
 
 <!-- 무엇을 쓸 것인가:

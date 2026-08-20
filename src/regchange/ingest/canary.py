@@ -387,29 +387,32 @@ class DailyIngestResult:
         return self.status in {IngestRunStatus.SUCCEEDED, IngestRunStatus.SUCCEEDED_ZERO}
 
 
-async def run_daily_ingest(client: LawApiClient, promulgation_date: str) -> DailyIngestResult:
-    """카나리아 → 본 수집 → 0건 재요청 순으로 하루치를 수집한다.
+async def poll_promulgation_date(
+    client: LawApiClient, promulgation_date: str, *, canary: CanaryResult | None = None
+) -> DailyIngestResult:
+    """공포일자 하루치를 수집한다 — **카나리아는 호출하지 않는다**.
 
     목적:
-        ADR-005 트랙 1의 공포 감지 경로. `regDt`(공포일자)로 그날 조문 개정 이력을
-        받는다.
+        `run_daily_ingest`에서 카나리아 이후 절차만 떼어낸 것. 여러 날짜를 한
+        실행에서 폴링할 때 카나리아를 날짜마다 반복하지 않기 위해 나눴다.
 
     구현 이유:
-        **카나리아를 본 수집보다 먼저 호출한다.** 순서가 뒤바뀌면 카나리아가
-        "이미 기록한 0"을 사후에 무효화하는 일이 되고, 그 무효화를 하류가 따라가야
-        한다. 먼저 확인하면 잘못된 0이 애초에 만들어지지 않는다.
+        운영은 **최근 N일을 재확인**한다(노트북이 꺼져 있던 날 따라잡기 + 법제처
+        등재 지연 흡수). 그 경로가 `run_daily_ingest`를 날짜마다 부르면 카나리아가
+        N번 호출된다. 카나리아가 답하는 질문("파이프라인이 살아 있는가")은 실행
+        단위이지 날짜 단위가 아니므로, 한 실행에 한 번이면 충분하다.
 
-        `regDt`는 **공포일자**다 (ADR-005). 시행일이 아니다 — 시행일 도래 감시는
-        외부 API를 쓰지 않고 내부 DB를 읽는 트랙 2이며 작업 3 이후다.
+        `canary`를 인자로 받아 결과에 그대로 실어 준다. 호출부가 판정 근거를
+        다시 조립하지 않게 하기 위해서다 — 조립하게 두면 실행 메타데이터의
+        카나리아 값과 실제 통과 여부가 갈릴 수 있다.
 
     트레이드오프:
-        카나리아 실패 시 그날 데이터가 아예 없다. 부분 수집보다 데이터 부재가
-        낫다는 판단이며(ADR-005), 대신 **알람이 반드시 사람에게 닿아야 한다** —
-        조용히 건너뛰면 "개정 없음"과 구별되지 않는다. 알람 전달은 이 함수의
-        책임이 아니고 `dispatch`가 담당한다.
+        이 함수만 단독으로 부르면 카나리아 없이 수집이 돌 수 있다. 그것을 막지
+        않은 이유는, 막으려면 `canary`를 필수 인자로 만들어야 하고 그때
+        `run_daily_ingest`의 단일 호출 편의가 사라지기 때문이다. **대신 이 함수를
+        직접 부르는 경로는 `ops.daily` 하나뿐이며 그 경로가 카나리아를 먼저 본다.**
 
     엣지 케이스:
-        - 카나리아 실패: `SKIPPED_CANARY_FAILED`. 본 수집을 호출하지 않는다.
         - 수집 실패: `FAILED`. 부분 결과를 담지 않는다.
         - 0건이고 재요청 확인: `SUCCEEDED_ZERO`.
         - 0건인데 재요청 미확인/불일치: `FAILED_ZERO_UNCONFIRMED`. 0으로 기록하지
@@ -417,14 +420,6 @@ async def run_daily_ingest(client: LawApiClient, promulgation_date: str) -> Dail
         - 비-0 수집 성공: `SUCCEEDED`. 재요청하지 않는다 — 비-0은 요청이 제대로
           갔다는 증거 자체다.
     """
-    canary = await probe_canary(client)
-    if not canary.passed:
-        return DailyIngestResult(
-            status=IngestRunStatus.SKIPPED_CANARY_FAILED,
-            detail=canary.detail,
-            canary=canary,
-        )
-
     params = {"regDt": promulgation_date}
     outcome = await client.collect(JO_HISTORY_BY_DATE, params)
     if isinstance(outcome, CollectionFailure):
@@ -460,3 +455,42 @@ async def run_daily_ingest(client: LawApiClient, promulgation_date: str) -> Dail
         canary=canary,
         zero_confirmation=confirmation,
     )
+
+
+async def run_daily_ingest(client: LawApiClient, promulgation_date: str) -> DailyIngestResult:
+    """카나리아 → 본 수집 → 0건 재요청 순으로 하루치를 수집한다.
+
+    목적:
+        ADR-005 트랙 1의 공포 감지 경로. `regDt`(공포일자)로 그날 조문 개정 이력을
+        받는다. 날짜 하나짜리 실행의 진입점이다.
+
+    구현 이유:
+        **카나리아를 본 수집보다 먼저 호출한다.** 순서가 뒤바뀌면 카나리아가
+        "이미 기록한 0"을 사후에 무효화하는 일이 되고, 그 무효화를 하류가 따라가야
+        한다. 먼저 확인하면 잘못된 0이 애초에 만들어지지 않는다.
+
+        `regDt`는 **공포일자**다 (ADR-005). 시행일이 아니다 — 시행일 도래 감시는
+        외부 API를 쓰지 않고 내부 DB를 읽는 트랙 2이며 작업 3 이후다.
+
+    트레이드오프:
+        카나리아 실패 시 그날 데이터가 아예 없다. 부분 수집보다 데이터 부재가
+        낫다는 판단이며(ADR-005), 대신 **알람이 반드시 사람에게 닿아야 한다** —
+        조용히 건너뛰면 "개정 없음"과 구별되지 않는다. 알람 전달은 이 함수의
+        책임이 아니다.
+
+        날짜 여러 개를 도는 운영 경로는 이 함수를 쓰지 않고 `probe_canary` +
+        `poll_promulgation_date`를 직접 조합한다. 카나리아 중복 호출을 피하기
+        위해서이며, 그 대가로 "카나리아를 먼저 본다"는 순서가 두 곳에 존재한다.
+
+    엣지 케이스:
+        - 카나리아 실패: `SKIPPED_CANARY_FAILED`. 본 수집을 호출하지 않는다.
+        - 그 외는 `poll_promulgation_date`와 같다.
+    """
+    canary = await probe_canary(client)
+    if not canary.passed:
+        return DailyIngestResult(
+            status=IngestRunStatus.SKIPPED_CANARY_FAILED,
+            detail=canary.detail,
+            canary=canary,
+        )
+    return await poll_promulgation_date(client, promulgation_date, canary=canary)
