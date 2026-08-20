@@ -1,5 +1,6 @@
 .DEFAULT_GOAL := help
-.PHONY: help setup up down migrate test lint typecheck fmt check clean
+.PHONY: help setup up down migrate test lint typecheck fmt check clean \
+        ops-run ops-history ops-summary ops-alerts ops-install ops-uninstall
 
 help: ## 사용 가능한 타깃을 출력한다
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -37,6 +38,24 @@ typecheck: ## mypy strict
 	uv run mypy
 
 check: lint typecheck test ## lint + typecheck + test
+
+ops-run: ## 일일 작업을 지금 한 번 돌린다 (cron 과 같은 경로)
+	./scripts/ops/daily_ingest.sh
+
+ops-history: ## 최근 30일 실행 이력
+	uv run regchange ops history
+
+ops-summary: ## 운영 시작일부터 오늘까지의 집계
+	uv run regchange ops summary
+
+ops-alerts: ## 최근 7일 알림 (MISMATCH · 변경규모 · 연속 0건 · 카나리아)
+	uv run regchange ops alerts
+
+ops-install: ## launchd 에 매일 07:00 KST 로 등록
+	./scripts/ops/install_launchd.sh
+
+ops-uninstall: ## launchd 등록 해제
+	./scripts/ops/install_launchd.sh --uninstall
 
 clean: ## 캐시 정리
 	rm -rf .pytest_cache .mypy_cache .ruff_cache

@@ -70,10 +70,20 @@ UI 검사는 API를 직접 호출하면 우회된다. 그래프가 중단되어 
 
 ## 운영 실적
 
-> **(자리표시자)** 아직 운영 데이터 없음. 0단계(스캐폴딩) 상태다.
+**2026-08-20 운영 시작.** 매일 07:00 KST 에 자동 실행된다 (ADR-014).
 
-<!-- 채울 것: 감시 중인 법령 수, 포착한 개정 건수, 제안 건수, 승인/반려 비율,
-     담당자 검토 소요 시간의 변화. baseline 없이 목표치만 적지 않는다. -->
+```bash
+regchange ops summary     # 운영 일수 / 성공·실패·미실행 일수 / 총 포착 건수
+regchange ops history     # 실행 이력 — 실패한 법령과 사유까지
+regchange ops alerts      # MISMATCH · 변경규모 초과 · 연속 0건 · 카나리아 실패
+```
+
+이 숫자는 로그 집계가 아니라 `ops_run` / `ops_law_outcome` 테이블 질의다. **실패한
+실행도 행으로 남는다** — "실패한 날"과 "실행하지 않은 날"을 구별하는 것이 그 테이블의
+존재 이유다. 실패를 숨긴 실적은 아무도 믿지 않는다.
+
+<!-- 채울 것: N일 운영 / M건 포착 / 실패 K일 (원인별). 매월 `ops summary` 출력을 옮긴다.
+     그 다음 단계에서: 제안 건수, 승인/반려 비율, 담당자 검토 소요 시간의 변화. -->
 
 ## 평가 지표
 
@@ -105,6 +115,22 @@ make test       # 테스트
 make check      # lint + typecheck + test
 make down       # 컨테이너 종료
 ```
+
+### 일일 운영
+
+```bash
+make ops-run        # 일일 작업을 지금 한 번 (cron 과 같은 경로)
+make ops-install    # launchd 등록 — 매일 07:00 KST
+make ops-summary    # 운영 실적
+```
+
+`SNAPSHOT_ROOT` 를 비워 두면 `data/snapshots` 를 쓴다. **운영에서는 절대 경로를 준다** —
+스케줄러는 작업 디렉터리가 다르다. AWS 배포에서 이 값이 S3 프리픽스가 되며, 매니페스트의
+`directory` 는 이미 루트 기준 상대 경로라 루트만 바꾸면 참조가 깨지지 않는다.
+
+macOS 에서 저장소가 `~/Documents` 아래에 있으면 launchd 실행이 권한으로 막힌다.
+`make ops-install` 이 감지해 경고하며, 해소 절차는
+[docs/06-runbook.md §5-1](./docs/06-runbook.md).
 
 `make setup` 이 만드는 `.env` 는 킬 스위치가 **전부 꺼진 상태**로 시작한다
 (`LLM_ENABLED`, `RETRIEVAL_ENABLED`, `DISPATCH_ENABLED` = `false`). 기본값이 꺼짐인
@@ -158,6 +184,7 @@ src/regchange/
 | 결정론적 조문 diff | 구현 | `diff/`. 이동 후보 포함, I/O 의존 없음(원칙 1) |
 | 도메인 선택 | 확정 | 12개월 전수 실측 — `docs/domain-selection/amendment-frequency.md`, ADR-008 |
 | 평가 골든셋 | 시나리오 15건 | `evals/datasets/golden/`. 문서 본문은 2-B에서 작성 |
+| 일일 운영 | 가동 중 | `ops/`. launchd 매일 07:00 KST, 최근 7일 재확인, 실행 이력 테이블 (ADR-014) |
 
 **아직 의도적으로 비어 있다**: 검색(`retrieval/`), LangGraph 노드·승인 interrupt(`graph/`),
 프롬프트(`prompts/`), 인용 검증(`verification/`), 킬 스위치(`guards/`), API(`api/`),
