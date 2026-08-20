@@ -105,6 +105,26 @@ OLD_AND_NEW_BODY = TargetSpec(
     required_params=frozenset({"MST"}),
 )
 
+ADMRUL_OLD_AND_NEW_LIST = TargetSpec(
+    key="admrul_old_and_new_list",
+    target="admrulOldAndNew",
+    endpoint="lawSearch.do",
+    family=ResponseFamily.SEARCH,
+    root_tag=PROVISIONAL_ROOT,
+    item_path="admrulOldAndNew",
+    required_params=frozenset({"query"}),
+)
+
+ADMRUL_OLD_AND_NEW_BODY = TargetSpec(
+    key="admrul_old_and_new_body",
+    target="admrulOldAndNew",
+    endpoint="lawService.do",
+    family=ResponseFamily.DOCUMENT,
+    root_tag=PROVISIONAL_ROOT,
+    item_path="*",
+    required_params=frozenset({"ID"}),
+)
+
 INFOSEC_LAW = "정보통신망 이용촉진 및 정보보호 등에 관한 법률"
 """탐색 대상. 코퍼스 9종 중 12개월 개정일이 가장 많다(4회, `amendment-frequency.md` B-2).
 버전이 여럿이어야 "직전 버전 특정"이 실제로 시험된다."""
@@ -118,6 +138,17 @@ PROBES: tuple[tuple[str, TargetSpec, dict[str, str]], ...] = (
     # (정보통신망법 2026 공포 순서: 282481 → 283843 → 285199).
     # 한 표본으로는 "직전"인지 "임의의 이전 버전"인지 구별되지 않는다.
     ("oldandnew_000030_mst283843", OLD_AND_NEW_BODY, {"MST": "283843"}),
+    # ADR-006 재검토용. 행정규칙은 조문 식별자를 하나도 주지 않는데(§6.1),
+    # 법령 쪽 신구법이 대비표를 준다는 것이 확인됐으므로 행정규칙 쪽도 같은지 본다.
+    # 대상: 전자금융감독규정 — 코퍼스의 행정규칙 4종 중 3단계 착수 1순위(ADR-006).
+    ("admrul_oldandnew_search_efsv", ADMRUL_OLD_AND_NEW_LIST, {"query": "전자금융감독규정"}),
+    # 위 목록의 1번(전자금융감독규정, 발령 20260715 일부개정)의 신구법일련번호.
+    # `ID`는 행정규칙**일련번호**다 — 행정규칙ID(21828)를 넣으면 실패한다(§3.6).
+    ("admrul_oldandnew_efsv_2100000282622", ADMRUL_OLD_AND_NEW_BODY, {"ID": "2100000282622"}),
+    # 연쇄 확인 — 위 응답의 구조문 일련번호(2100000274812, 발령 20260213)로 다시 호출한다.
+    # 목록 조회는 현행 1건만 주므로, 과거로 거슬러 가려면 이 연쇄가 성립해야 한다.
+    # 비-현행 ID에도 본문 조회가 동작하는지가 함께 시험된다.
+    ("admrul_oldandnew_efsv_2100000274812", ADMRUL_OLD_AND_NEW_BODY, {"ID": "2100000274812"}),
 )
 
 
