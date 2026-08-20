@@ -10,6 +10,15 @@
 #   일치하지 않을 수 있다. 로컬 셋업 속도를 얻는 대신 환경 동등성을 일부
 #   포기했다. 버전 차이로 인한 문제는 integration 테스트가 CI에서 관리형
 #   인스턴스를 대상으로 돌 때 드러나야 한다.
+# 프로젝트명을 명시하는 이유:
+#   생략하면 compose 가 디렉터리 basename 을 프로젝트명으로 쓰고, 그것이 볼륨
+#   이름(`<프로젝트명>_regchange-pgdata`)의 접두사가 된다. 즉 운영 데이터가
+#   디렉터리 이름에 묶인다. 저장소를 옮기는 것은 안전하지만 **이름을 바꾸면
+#   compose 가 새 빈 볼륨을 만들고, 에러 없이 DB 가 비어 보인다.**
+#   2026-08-20 경로 이동에서 basename 이 우연히 같아 드러나지 않았던 결합이다
+#   (docs/08-deployment-considerations.md §5-1).
+name: regchange-copilot
+
 services:
   postgres:
     image: pgvector/pgvector:pg16
