@@ -112,6 +112,38 @@ class SnapshotError(RuntimeError):
     """스냅샷 저장·조회가 실패했을 때 발생한다."""
 
 
+class SnapshotExistsError(SnapshotError):
+    """**이미 같은 요청의 스냅샷이 있다.** 실패가 아니라 거부다.
+
+    목적:
+        "저장하지 못했다"의 두 가지 뜻을 타입으로 가른다 —
+        **이미 있어서 안 썼다**와 **쓰려다 실패했다.**
+
+    구현 이유:
+        하나로 두면 호출부가 뭉갠다. 2026-08-23 골든셋 확장 수집에서 실제로
+        그랬다 — 러너가 `except SnapshotError` 로 잡아 전부 「실패/중복」으로 셌고,
+        **본문 12건을 받아 놓고 5건만 받았다고 보고했다**
+        (`docs/incidents/measurement-reported-failure-as-success.md` §5-2).
+
+        `SnapshotError` 는 7곳에서 발생한다 — 타임존 없는 시각, 빈 페이지 목록,
+        매니페스트 형식 오류 등. 그중 **이 하나만 정상 흐름**이며, 나머지는
+        고쳐야 할 결함이다. 같은 타입으로 두면 결함이 "중복이겠지"로 넘어간다.
+
+        `ResponseKind` 가 응답 실패를 6종으로 가른 것과 같은 원리다 —
+        **호출부가 판단하지 않고 타입이 이미 갈라져 있다.**
+
+    트레이드오프:
+        예외 종류가 하나 는다. 상위 타입을 그대로 두었으므로 기존 `except
+        SnapshotError` 는 계속 동작한다 — 다만 그 호출부는 여전히 뭉갠다.
+        구별이 필요한 곳만 이 타입을 잡는다.
+
+    엣지 케이스:
+        - **params 가 다른데 디렉터리가 같음**: 키 해시(6자리) 충돌이며 **거부가
+          아니라 결함이다.** 메시지가 두 params 를 함께 싣는 이유가 그것이고,
+          지금은 타입으로 가르지 않는다 — 관측된 적이 없다.
+    """
+
+
 def utc_now() -> datetime:
     """tz-aware UTC 현재 시각.
 
@@ -521,8 +553,10 @@ async def write_snapshot(
         규약). 고아 페이지는 매니페스트가 없어 읽히지 않으므로 무해하다.
 
     엣지 케이스:
-        - 같은 키 디렉터리에 매니페스트가 이미 있으면 `SnapshotError`. 해시 충돌
-          또는 같은 요청 재수집이며, `params`를 대조해 어느 쪽인지 알린다.
+        - 같은 키 디렉터리에 매니페스트가 이미 있으면 **`SnapshotExistsError`**
+          (`SnapshotError` 의 하위 타입). 해시 충돌 또는 같은 요청 재수집이며,
+          `params`를 대조해 어느 쪽인지 알린다. **이것만 정상 흐름이고 나머지
+          `SnapshotError` 는 결함이다** — 호출부가 둘을 뭉개지 않도록 타입을 나눴다.
         - 페이지 파일이 이미 있으면 저장소가 거부한다(덮어쓰기 금지). 그 예외를
           그대로 전파한다.
         - 마스킹 실패: `MaskingError`가 전파된다. 저장을 중단시킨다.
@@ -538,7 +572,7 @@ async def write_snapshot(
 
     existing = await _read_manifest_if_present(store, manifest_key)
     if existing is not None:
-        raise SnapshotError(
+        raise SnapshotExistsError(
             f"이미 매니페스트가 있는 디렉터리다: {manifest.directory}. "
             f"기존 params={dict(existing.params)} / 새 params={dict(manifest.params)}. "
             "params 가 다르면 해시 충돌이며(6자리 절단), 같으면 같은 요청의 재수집이다. "
