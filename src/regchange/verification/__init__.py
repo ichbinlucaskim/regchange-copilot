@@ -23,4 +23,19 @@
     - 인용이 0건인 경우: 스키마 위반으로 폐기한다. 인용은 optional 이 아니다.
     - 검증기 자체가 실패·타임아웃: 실패는 통과가 아니다. 폐기하고 재시도한다.
     - I/O 의존성을 갖지 않는다. 검색 결과와 초안을 인자로 받아 판정만 한다.
+      **`prompts` 도 import 하지 않는다** — 프롬프트 모듈이 `adapters.llm` 의 타입을
+      쓰므로, 그것을 거치면 격리 계약이 간접 경로로 깨진다. 판정 어휘(`SupportLevel`)를
+      이 패키지가 정의하고 프롬프트가 가져다 쓰는 방향이다.
 """
+
+from regchange.verification.base import SupportLevel, SupportVerdict, SupportVerifier
+from regchange.verification.grounding import ClaimJudgment, GroundingResult, decide
+
+__all__ = [
+    "ClaimJudgment",
+    "GroundingResult",
+    "SupportLevel",
+    "SupportVerdict",
+    "SupportVerifier",
+    "decide",
+]
