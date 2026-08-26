@@ -1,7 +1,8 @@
 .DEFAULT_GOAL := help
 .PHONY: help setup up down migrate test lint typecheck fmt check clean \
         ops-run ops-history ops-summary ops-alerts ops-install ops-uninstall \
-        review-ui eval-impact eval-impact-deanchored eval-delegation eval-routing-precheck
+        review-ui eval-impact eval-impact-deanchored eval-delegation eval-routing-precheck \
+        eval-baseline eval-citation-adequacy eval-citation-adequacy-score eval-power
 
 help: ## 사용 가능한 타깃을 출력한다
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -66,6 +67,19 @@ eval-delegation: ## 위임 승격 top_n 스윕 (R-22)
 
 eval-routing-precheck: ## 라우팅 사전 확인 — 기록과 검색만 읽는다 (LLM 미호출, $0)
 	uv run --group eval python -m evals.runners.routing_precheck
+
+eval-baseline: ## B-1/B-2/B-3 과 LLM 파이프라인을 같은 채점 함수로 대조 (LLM 미호출, $0)
+	uv run --group eval python -m evals.runners.baseline \
+		--impact-result evals/results/impact-claude-sonnet-5-20260825T214746Z.json
+
+eval-citation-adequacy: ## 인용 적합도 판정지 생성 — 판정은 사람이 한다 (LLM 미호출, $0)
+	uv run --group eval python -m evals.runners.citation_adequacy
+
+eval-citation-adequacy-score: ## 채워진 판정지를 읽어 F-6 과 신뢰구간을 계산한다 ($0)
+	uv run --group eval python -m evals.runners.citation_adequacy --score
+
+eval-power: ## 검정력 분석 — 지금까지의 대조가 유의한가 (LLM 미호출, $0)
+	uv run --group eval python -m evals.runners.power_analysis
 
 ops-install: ## launchd 에 매일 07:00 KST 로 등록
 	./scripts/ops/install_launchd.sh

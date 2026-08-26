@@ -1,0 +1,295 @@
+{
+  "protocol": "docs/10-retrieval-evaluation-protocol.md",
+  "as_of": "2026-02-01",
+  "k": 10,
+  "corpus_paragraphs": 152,
+  "B-1": {
+    "name": "B-1 인용 문자열",
+    "impact_cases": 20,
+    "case_hit": 6,
+    "item_recall": 0.15,
+    "precision": 0.2167,
+    "claimed_per_case": 0.62,
+    "decoys_cited": 2,
+    "hard_cases": 15,
+    "hard_both_docs": 1,
+    "difficulty_recall": {
+      "EASY": 0.625,
+      "MEDIUM": 0.0476
+    },
+    "difficulty_n": {
+      "EASY": 8,
+      "MEDIUM": 42
+    },
+    "empty_abstained": 10,
+    "empty_total": 11,
+    "no_impact_abstained": 5,
+    "no_impact_total": 11,
+    "tokens": {
+      "case-001": [
+        "제48조의3"
+      ],
+      "case-002": [
+        "제45조의3"
+      ],
+      "case-003": [
+        "제45조의3"
+      ],
+      "case-004": [
+        "제47조"
+      ],
+      "case-005": [
+        "제45조의4",
+        "제45조의5"
+      ],
+      "case-006": [
+        "제48조의9"
+      ],
+      "case-007": [
+        "제31조"
+      ],
+      "case-008": [
+        "제34조"
+      ],
+      "case-009": [
+        "제29조"
+      ],
+      "case-010": [
+        "제30조의3"
+      ],
+      "case-011": [
+        "제20조"
+      ],
+      "case-012": [
+        "제42조의5",
+        "제42조의6"
+      ],
+      "case-013": [
+        "제44조의2",
+        "제44조의3",
+        "제44조의4",
+        "제44조의5"
+      ],
+      "case-014": [
+        "제44조의11",
+        "제44조의26",
+        "제44조의4",
+        "제44조의6",
+        "제44조의7",
+        "제44조의10"
+      ],
+      "case-015": [
+        "제25조의2",
+        "제25조의4",
+        "제25조의5",
+        "제36조의3",
+        "제42조의2"
+      ],
+      "case-016": [
+        "제48조의4"
+      ],
+      "case-017": [
+        "제48조의10"
+      ],
+      "case-018": [
+        "제47조의7"
+      ],
+      "case-019": [
+        "제49조"
+      ],
+      "case-020": [
+        "제26조"
+      ],
+      "case-021": [
+        "제24조의2"
+      ],
+      "case-022": [
+        "제28조의7"
+      ],
+      "case-023": [
+        "제2조"
+      ],
+      "case-024": [
+        "제14조의2"
+      ],
+      "case-025": [
+        "제42조의2"
+      ],
+      "case-026": [
+        "제23조의3"
+      ],
+      "case-027": [
+        "제22조의2"
+      ],
+      "case-028": [
+        "제42조의2"
+      ],
+      "case-029": [
+        "제13조의5"
+      ],
+      "case-030": [
+        "제71조"
+      ],
+      "case-031": [
+        "제34조"
+      ],
+      "case-032": [
+        "제13조"
+      ],
+      "case-033": [
+        "제12조"
+      ],
+      "case-034": [
+        "제19조"
+      ],
+      "case-035": [
+        "제2조의5"
+      ],
+      "case-036": [
+        "제2조의4"
+      ],
+      "case-037": [
+        "제15조"
+      ],
+      "case-038": [
+        "제44조의7"
+      ],
+      "case-039": [
+        "제2조의2"
+      ],
+      "case-040": [
+        "제50조의4"
+      ],
+      "case-041": [
+        "제2조",
+        "제13조의2"
+      ],
+      "case-042": [
+        "제13조의4"
+      ]
+    },
+    "matches": {
+      "case-001": 1,
+      "case-002": 1,
+      "case-003": 1,
+      "case-004": 1,
+      "case-005": 0,
+      "case-006": 0,
+      "case-007": 3,
+      "case-008": 4,
+      "case-009": 2,
+      "case-010": 0,
+      "case-011": 2,
+      "case-012": 0,
+      "case-013": 0,
+      "case-014": 0,
+      "case-015": 0,
+      "case-016": 0,
+      "case-017": 0,
+      "case-018": 0,
+      "case-019": 0,
+      "case-020": 0,
+      "case-021": 0,
+      "case-022": 0,
+      "case-023": 0,
+      "case-024": 0,
+      "case-025": 0,
+      "case-026": 0,
+      "case-027": 0,
+      "case-028": 0,
+      "case-029": 0,
+      "case-030": 0,
+      "case-031": 4,
+      "case-032": 2,
+      "case-033": 2,
+      "case-034": 1,
+      "case-035": 0,
+      "case-036": 0,
+      "case-037": 2,
+      "case-038": 0,
+      "case-039": 0,
+      "case-040": 0,
+      "case-041": 0,
+      "case-042": 0
+    }
+  },
+  "B-2": {
+    "case_hit": 3.075,
+    "item_recall": 0.0652,
+    "precision": 0.0164,
+    "decoys_cited": 6.65,
+    "trials": 200,
+    "name": "B-2"
+  },
+  "B-3": {
+    "name": "B-3 검색 top-k",
+    "impact_cases": 20,
+    "case_hit": 17,
+    "item_recall": 0.575,
+    "precision": 0.135,
+    "claimed_per_case": 10.0,
+    "decoys_cited": 34,
+    "hard_cases": 15,
+    "hard_both_docs": 5,
+    "difficulty_recall": {
+      "EASY": 0.875,
+      "MEDIUM": 0.4762
+    },
+    "difficulty_n": {
+      "EASY": 8,
+      "MEDIUM": 42
+    },
+    "empty_abstained": 0,
+    "empty_total": 11,
+    "no_impact_abstained": 0,
+    "no_impact_total": 11
+  },
+  "B-3-promoted": {
+    "name": "B-3 검색 top-k + 위임승격",
+    "impact_cases": 20,
+    "case_hit": 17,
+    "item_recall": 0.6,
+    "precision": 0.114,
+    "claimed_per_case": 12.17,
+    "decoys_cited": 35,
+    "hard_cases": 15,
+    "hard_both_docs": 6,
+    "difficulty_recall": {
+      "EASY": 0.875,
+      "MEDIUM": 0.5
+    },
+    "difficulty_n": {
+      "EASY": 8,
+      "MEDIUM": 42
+    },
+    "empty_abstained": 0,
+    "empty_total": 11,
+    "no_impact_abstained": 0,
+    "no_impact_total": 11
+  },
+  "LLM": {
+    "name": "LLM 파이프라인 (impact-claude-sonnet-5-20260825T214746Z.json)",
+    "impact_cases": 20,
+    "case_hit": 13,
+    "item_recall": 0.3208,
+    "precision": 0.625,
+    "claimed_per_case": 0.48,
+    "decoys_cited": 1,
+    "hard_cases": 15,
+    "hard_both_docs": 0,
+    "difficulty_recall": {
+      "EASY": 0.625,
+      "MEDIUM": 0.2143
+    },
+    "difficulty_n": {
+      "EASY": 8,
+      "MEDIUM": 42
+    },
+    "empty_abstained": 9,
+    "empty_total": 11,
+    "no_impact_abstained": 11,
+    "no_impact_total": 11,
+    "source": "impact-claude-sonnet-5-20260825T214746Z.json",
+    "empty_abstained_actual": 9
+  }
+}

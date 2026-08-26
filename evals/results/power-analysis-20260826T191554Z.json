@@ -1,0 +1,314 @@
+{
+  "method": "Miller 2024, arXiv:2411.00640 — eq (1)(4)(7)(8)(9)(10), Appendix C",
+  "alpha": 0.05,
+  "power": 0.8,
+  "target_deltas": [
+    0.05,
+    0.1,
+    0.2
+  ],
+  "generated_for": "docs/23-metrics-summary.md",
+  "comparisons": [
+    {
+      "name": "EMBEDDING_KURE_vs_BGE",
+      "unit": "케이스별 재현율@10 (VECTOR)",
+      "label_a": "KURE-v1",
+      "label_b": "bge-m3",
+      "n": 10,
+      "clusters": 3,
+      "cluster_sizes": [
+        5,
+        4,
+        1
+      ],
+      "mean_a": 0.7667,
+      "mean_b": 0.7167,
+      "mean_diff": 0.05,
+      "nonzero_diffs": 1,
+      "se_paired": 0.05,
+      "se_paired_clustered": 0.0394,
+      "design_effect": 0.62,
+      "ci95": [
+        -0.048,
+        0.148
+      ],
+      "ci95_clustered": [
+        -0.0272,
+        0.1272
+      ],
+      "z": 1.0,
+      "significant_normal": false,
+      "mcnemar_exact_p": null,
+      "mcnemar_discordant": null,
+      "sigma2_a": 0.0,
+      "sigma2_b": 0.0,
+      "observed_var": 0.025,
+      "omega2": 0.025,
+      "omega2_clipped": false,
+      "required_n": {
+        "0.05": 79,
+        "0.10": 20,
+        "0.20": 5
+      },
+      "required_n_clustered": {
+        "0.05": 49,
+        "0.10": 13,
+        "0.20": 4
+      },
+      "mde": {
+        "10": 0.1401,
+        "20": 0.0991,
+        "42": 0.0684,
+        "80": 0.0495
+      },
+      "mde_clustered": {
+        "10": 0.1103,
+        "20": 0.078,
+        "42": 0.0538,
+        "80": 0.039
+      }
+    },
+    {
+      "name": "GROUNDING_anchored_vs_deanchored__hit",
+      "unit": "케이스 적중 (0/1)",
+      "label_a": "anchored",
+      "label_b": "de-anchored",
+      "n": 10,
+      "clusters": 3,
+      "cluster_sizes": [
+        5,
+        4,
+        1
+      ],
+      "mean_a": 0.9,
+      "mean_b": 0.6,
+      "mean_diff": 0.3,
+      "nonzero_diffs": 3,
+      "se_paired": 0.1528,
+      "se_paired_clustered": 0.0616,
+      "design_effect": 0.163,
+      "ci95": [
+        0.0006,
+        0.5994
+      ],
+      "ci95_clustered": [
+        0.1792,
+        0.4208
+      ],
+      "z": 1.964,
+      "significant_normal": true,
+      "mcnemar_exact_p": 0.25,
+      "mcnemar_discordant": {
+        "a_only": 3,
+        "b_only": 0
+      },
+      "sigma2_a": 0.0,
+      "sigma2_b": 0.0,
+      "observed_var": 0.23333,
+      "omega2": 0.23333,
+      "omega2_clipped": false,
+      "required_n": {
+        "0.05": 733,
+        "0.10": 184,
+        "0.20": 46
+      },
+      "required_n_clustered": {
+        "0.05": 120,
+        "0.10": 30,
+        "0.20": 8
+      },
+      "mde": {
+        "10": 0.4279,
+        "20": 0.3026,
+        "42": 0.2088,
+        "80": 0.1513
+      },
+      "mde_clustered": {
+        "10": 0.1727,
+        "20": 0.1221,
+        "42": 0.0843,
+        "80": 0.0611
+      }
+    },
+    {
+      "name": "GROUNDING_anchored_vs_deanchored__recall",
+      "unit": "케이스별 정답 문단 재현율",
+      "label_a": "anchored",
+      "label_b": "de-anchored",
+      "n": 10,
+      "clusters": 3,
+      "cluster_sizes": [
+        5,
+        4,
+        1
+      ],
+      "mean_a": 0.4917,
+      "mean_b": 0.3667,
+      "mean_diff": 0.125,
+      "nonzero_diffs": 3,
+      "se_paired": 0.0716,
+      "se_paired_clustered": 0.0212,
+      "design_effect": 0.088,
+      "ci95": [
+        -0.0154,
+        0.2654
+      ],
+      "ci95_clustered": [
+        0.0834,
+        0.1666
+      ],
+      "z": 1.745,
+      "significant_normal": false,
+      "mcnemar_exact_p": null,
+      "mcnemar_discordant": null,
+      "sigma2_a": 0.01204,
+      "sigma2_b": 0.01204,
+      "observed_var": 0.05131,
+      "omega2": 0.02724,
+      "omega2_clipped": false,
+      "required_n": {
+        "0.05": 162,
+        "0.10": 41,
+        "0.20": 11
+      },
+      "required_n_clustered": {
+        "0.05": 15,
+        "0.10": 4,
+        "0.20": 1
+      },
+      "mde": {
+        "10": 0.2007,
+        "20": 0.1419,
+        "42": 0.0979,
+        "80": 0.071
+      },
+      "mde_clustered": {
+        "10": 0.0595,
+        "20": 0.0421,
+        "42": 0.029,
+        "80": 0.021
+      }
+    },
+    {
+      "name": "MAX_REVISIONS_1_vs_0__hit",
+      "unit": "케이스 적중 (0/1)",
+      "label_a": "MAX_REVISIONS=1",
+      "label_b": "MAX_REVISIONS=0 (회차1)",
+      "n": 10,
+      "clusters": 3,
+      "cluster_sizes": [
+        5,
+        4,
+        1
+      ],
+      "mean_a": 0.9,
+      "mean_b": 0.8,
+      "mean_diff": 0.1,
+      "nonzero_diffs": 1,
+      "se_paired": 0.1,
+      "se_paired_clustered": 0.0648,
+      "design_effect": 0.42,
+      "ci95": [
+        -0.096,
+        0.296
+      ],
+      "ci95_clustered": [
+        -0.027,
+        0.227
+      ],
+      "z": 1.0,
+      "significant_normal": false,
+      "mcnemar_exact_p": 1.0,
+      "mcnemar_discordant": {
+        "a_only": 1,
+        "b_only": 0
+      },
+      "sigma2_a": 0.0,
+      "sigma2_b": 0.0,
+      "observed_var": 0.1,
+      "omega2": 0.1,
+      "omega2_clipped": false,
+      "required_n": {
+        "0.05": 314,
+        "0.10": 79,
+        "0.20": 20
+      },
+      "required_n_clustered": {
+        "0.05": 132,
+        "0.10": 33,
+        "0.20": 9
+      },
+      "mde": {
+        "10": 0.2802,
+        "20": 0.1981,
+        "42": 0.1367,
+        "80": 0.0991
+      },
+      "mde_clustered": {
+        "10": 0.1816,
+        "20": 0.1284,
+        "42": 0.0886,
+        "80": 0.0642
+      }
+    },
+    {
+      "name": "MAX_REVISIONS_1_vs_0__recall",
+      "unit": "케이스별 정답 문단 재현율",
+      "label_a": "MAX_REVISIONS=1",
+      "label_b": "MAX_REVISIONS=0 (회차1)",
+      "n": 10,
+      "clusters": 3,
+      "cluster_sizes": [
+        5,
+        4,
+        1
+      ],
+      "mean_a": 0.4917,
+      "mean_b": 0.4583,
+      "mean_diff": 0.0333,
+      "nonzero_diffs": 1,
+      "se_paired": 0.0333,
+      "se_paired_clustered": 0.0216,
+      "design_effect": 0.42,
+      "ci95": [
+        -0.032,
+        0.0987
+      ],
+      "ci95_clustered": [
+        -0.009,
+        0.0757
+      ],
+      "z": 1.0,
+      "significant_normal": false,
+      "mcnemar_exact_p": null,
+      "mcnemar_discordant": null,
+      "sigma2_a": 0.01204,
+      "sigma2_b": 0.01204,
+      "observed_var": 0.01111,
+      "omega2": 0.0,
+      "omega2_clipped": true,
+      "required_n": {
+        "0.05": 76,
+        "0.10": 19,
+        "0.20": 5
+      },
+      "required_n_clustered": {
+        "0.05": 15,
+        "0.10": 4,
+        "0.20": 1
+      },
+      "mde": {
+        "10": 0.1375,
+        "20": 0.0972,
+        "42": 0.0671,
+        "80": 0.0486
+      },
+      "mde_clustered": {
+        "10": 0.0605,
+        "20": 0.0428,
+        "42": 0.0295,
+        "80": 0.0214
+      }
+    }
+  ]
+}
