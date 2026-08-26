@@ -2,6 +2,18 @@
 id: case-005
 title: 정보보호위원회 설치 의무와 정보보호수준 평가 제도 신설
 
+source_id: MST-285199
+case_type: IMPACT
+b1_probed: true
+b1_matched: false
+b1_matched_articles: []
+b1_match_kind: null
+
+after_coverage:
+  ratio: null
+  reason: MULTI_ARTICLE
+  article_path: 제45조의4, 제45조의5
+
 source:
   law_id: "000030"
   law_name: 정보통신망 이용촉진 및 정보보호 등에 관한 법률

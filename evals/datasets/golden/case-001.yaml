@@ -3,6 +3,19 @@
 id: case-001
 title: 침해사고 신고 기한 명문화(즉시 → 24시간)와 이용자 통지 의무 신설
 
+source_id: MST-285199
+case_type: IMPACT
+b1_probed: true
+b1_matched: true
+b1_matched_articles: [ISP-PROC-002#7]
+b1_match_kind: OTHER_LAW_CITATION
+
+after_coverage:
+  ratio: 0.6373
+  after_chars: 513
+  assembled_chars: 805
+  measured_at: '2026-08-25'
+
 source:
   law_id: "000030"
   law_name: 정보통신망 이용촉진 및 정보보호 등에 관한 법률

@@ -2,6 +2,19 @@
 id: case-008
 title: 개인정보 유출등 통지 — 항목 2개 추가와 "유출 가능성" 단계 통지 의무 신설
 
+source_id: MST-283839
+case_type: IMPACT
+b1_probed: true
+b1_matched: true
+b1_matched_articles: [ISP-GUIDE-002#25, ISP-GUIDE-003#26, ISP-GUIDE-003#35, ISP-PROC-002#11]
+b1_match_kind: OTHER_LAW_CITATION
+
+after_coverage:
+  ratio: 0.6457
+  after_chars: 789
+  assembled_chars: 1222
+  measured_at: '2026-08-25'
+
 source:
   law_id: "011357"
   law_name: 개인정보 보호법

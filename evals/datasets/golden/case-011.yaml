@@ -2,6 +2,18 @@
 id: case-011
 title: 신용정보 관리·보호인 조문의 타법개정 — 인용 항 번호만 바뀌었다
 
+source_id: MST-283841
+case_type: OTHER_LAW_PLAIN
+b1_probed: true
+b1_matched: true
+b1_matched_articles: [ISP-GUIDE-003#11, ISP-GUIDE-003#12]
+b1_match_kind: OTHER_LAW_CITATION
+
+after_coverage:
+  ratio: null
+  reason: MULTI_ARTICLE
+  article_path: 제20조 제4항 제1호 가목
+
 source:
   law_id: "001540"
   law_name: 신용정보의 이용 및 보호에 관한 법률

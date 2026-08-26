@@ -3,6 +3,19 @@
 id: case-007
 title: 개인정보 보호책임자 — 이사회 의결·신고 의무 신설과 업무 재편
 
+source_id: MST-283839
+case_type: IMPACT
+b1_probed: true
+b1_matched: true
+b1_matched_articles: [ISP-GUIDE-002#14, ISP-GUIDE-003#6, ISP-GUIDE-003#20]
+b1_match_kind: OTHER_LAW_CITATION
+
+after_coverage:
+  ratio: 0.4719
+  after_chars: 790
+  assembled_chars: 1674
+  measured_at: '2026-08-25'
+
 source:
   law_id: "011357"
   law_name: 개인정보 보호법

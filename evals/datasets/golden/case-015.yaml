@@ -2,6 +2,18 @@
 id: case-015
 title: 선불충전금ㆍ정산대상금액 보호 제도 정비 — 정보보호 의무가 아님
 
+source_id: MST-280277
+case_type: EMPTY_PART_UNRELATED
+b1_probed: true
+b1_matched: false
+b1_matched_articles: []
+b1_match_kind: null
+
+after_coverage:
+  ratio: null
+  reason: MULTI_ARTICLE
+  article_path: 제25조의2, 제25조의4, 제25조의5, 제36조의3, 제42조의2 외 10개 조문
+
 source:
   law_id: "010199"
   law_name: 전자금융거래법

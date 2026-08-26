@@ -2,6 +2,19 @@
 id: case-004
 title: 정보보호 관리체계 인증 — 대상 기준 재편, 사후관리 현장심사 병행, 취소 사유 추가
 
+source_id: MST-285199
+case_type: IMPACT
+b1_probed: true
+b1_matched: true
+b1_matched_articles: [ISP-GUIDE-002#19]
+b1_match_kind: OTHER_LAW_CITATION
+
+after_coverage:
+  ratio: 0.2001
+  after_chars: 479
+  assembled_chars: 2394
+  measured_at: '2026-08-25'
+
 source:
   law_id: "000030"
   law_name: 정보통신망 이용촉진 및 정보보호 등에 관한 법률

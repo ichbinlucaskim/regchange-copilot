@@ -2,6 +2,18 @@
 id: case-014
 title: 불법정보ㆍ허위조작정보 유통 규제와 분쟁조정 제도 신설 — 규율 영역이 다름
 
+source_id: MST-282481
+case_type: EMPTY_OUT_OF_SCOPE
+b1_probed: true
+b1_matched: false
+b1_matched_articles: []
+b1_match_kind: null
+
+after_coverage:
+  ratio: null
+  reason: MULTI_ARTICLE
+  article_path: 제44조의11 ~ 제44조의26 (16개 조문 신설), 제44조의4·6·7·10 개정
+
 source:
   law_id: "000030"
   law_name: 정보통신망 이용촉진 및 정보보호 등에 관한 법률

@@ -2,6 +2,18 @@
 id: case-012
 title: 개인정보 전송요구 — 대리인 경유 요구 거절 금지와 전송 방식 요건 정비
 
+source_id: MST-283503
+case_type: IMPACT
+b1_probed: true
+b1_matched: false
+b1_matched_articles: []
+b1_match_kind: null
+
+after_coverage:
+  ratio: null
+  reason: MULTI_ARTICLE
+  article_path: 제42조의5, 제42조의6
+
 source:
   law_id: "011468"
   law_name: 개인정보 보호법 시행령

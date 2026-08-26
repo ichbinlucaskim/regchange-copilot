@@ -2,6 +2,19 @@
 id: case-006
 title: 침해사고 관리·대응 매뉴얼 작성·제출 의무 신설
 
+source_id: MST-285199
+case_type: IMPACT
+b1_probed: true
+b1_matched: false
+b1_matched_articles: []
+b1_match_kind: null
+
+after_coverage:
+  ratio: 1.0017
+  after_chars: 590
+  assembled_chars: 589
+  measured_at: '2026-08-25'
+
 source:
   law_id: "000030"
   law_name: 정보통신망 이용촉진 및 정보보호 등에 관한 법률

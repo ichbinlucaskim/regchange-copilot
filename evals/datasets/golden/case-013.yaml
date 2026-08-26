@@ -2,6 +2,18 @@
 id: case-013
 title: 채무조정기구에 대한 신용정보 제공 특례 신설 — 대응 사내 조항 없음
 
+source_id: MST-285955
+case_type: EMPTY_NEW_PROVISION
+b1_probed: true
+b1_matched: false
+b1_matched_articles: []
+b1_match_kind: null
+
+after_coverage:
+  ratio: null
+  reason: MULTI_ARTICLE
+  article_path: 제44조의2, 제44조의3, 제44조의4, 제44조의5
+
 source:
   law_id: "001540"
   law_name: 신용정보의 이용 및 보호에 관한 법률
