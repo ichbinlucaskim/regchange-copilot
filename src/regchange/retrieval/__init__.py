@@ -20,8 +20,66 @@
 엣지 케이스:
     - 관련 문단이 없는 경우: 빈 결과를 그대로 반환한다. 유사도 임계값을 낮춰
       억지로 채우지 않는다. 빈 결과는 "영향 없음" 판정의 정당한 근거다.
-    - RETRIEVAL_ENABLED 가 꺼진 경우: 빈 결과가 아니라 명시적 비활성 상태를
-      알린다. 둘을 구별하지 않으면 킬 스위치가 "영향 없음"으로 오독된다.
+    - RETRIEVAL_ENABLED 가 꺼진 경우: 빈 결과가 아니라 **예외로 멈춘다**
+      (`guards.killswitch.KillSwitchError`, 5단계). 둘을 구별하지 않으면 킬 스위치가
+      "영향 없음"으로 오독된다 — 빈 결과는 이 패키지에서 **정당한 판정 근거**이므로
+      비활성이 같은 값을 쓰면 안 된다.
     - 문단 ID 중복·소실: 검색 결과의 ID는 검증 단계의 정답 집합이므로,
       중복이나 누락은 조용히 넘기지 않고 오류로 올린다.
 """
+
+from regchange.retrieval.corpus import (
+    CorpusError,
+    load_corpus,
+    parse_article_spec,
+    parse_policy_document,
+)
+from regchange.retrieval.delegation import (
+    DelegationEdge,
+    DelegationError,
+    DelegationGraph,
+    DelegationSource,
+    build_delegation_graph,
+    parse_delegations,
+)
+from regchange.retrieval.models import (
+    DelegationReport,
+    PolicyArticle,
+    PolicyDocument,
+    PromotionBasis,
+    PromotionMechanism,
+    RetrievalResult,
+    RetrievalSource,
+    RetrievedChunk,
+    SearchMode,
+)
+from regchange.retrieval.promote import load_delegation_graph, promote_by_delegation
+from regchange.retrieval.query import build_query
+from regchange.retrieval.search import SearchError, search
+
+__all__ = [
+    "CorpusError",
+    "DelegationEdge",
+    "DelegationError",
+    "DelegationGraph",
+    "DelegationReport",
+    "DelegationSource",
+    "PolicyArticle",
+    "PolicyDocument",
+    "PromotionBasis",
+    "PromotionMechanism",
+    "RetrievalResult",
+    "RetrievalSource",
+    "RetrievedChunk",
+    "SearchError",
+    "SearchMode",
+    "build_delegation_graph",
+    "build_query",
+    "load_corpus",
+    "load_delegation_graph",
+    "parse_article_spec",
+    "parse_delegations",
+    "parse_policy_document",
+    "promote_by_delegation",
+    "search",
+]
