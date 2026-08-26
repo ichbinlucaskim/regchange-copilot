@@ -29,9 +29,30 @@ uv.lock.bak
 data/ops-logs/
 
 # --- 평가 산출물 -------------------------------------------------------------
-# 결과는 재현 가능해야 하므로 산출물이 아니라 러너와 데이터셋을 커밋한다.
+# 기본 정책은 결과를 커밋하지 않는 것이다 — 러너와 데이터셋으로 다시 만들 수 있으면
+# 그것으로 충분하다.
+#
+# **그 전제는 검색에만 참이다.** 검색은 결정론이고(`docs/15-variability-results.md` —
+# 3회 완전 일치, 편차 0), **LLM 결과는 재현되지 않는다**(같은 문서 — 케이스 단위로
+# 15건 중 10건이 흔들린다, R-27). 재현되지 않는 것을 재현 가능하다고 전제한 정책이었다.
+# 다시 돌리면 그때의 결과가 아니라 지금의 결과가 나온다.
+#
+# 그래서 **문서가 결론의 근거로 이름을 대어 인용하는 결과만** 예외로 커밋한다.
+# 중간 실행(57건 중 51건)은 커밋하지 않는다 — 전부 넣으면 어느 것이 근거인지 흐려진다.
+# 결과가 많은 것과 근거가 명확한 것은 다르다.
 evals/results/*
 !evals/results/.gitkeep
+# docs/18 §3 — 적대적 19건 최종 병합본
+!evals/results/adversarial-merged-final-20260823.json
+# docs/20 §2 · docs/21 §7.3 — 확장 원천과 개정 조문 목록
+!evals/results/expansion-sources-20260823T214811Z.json
+# docs/21 — 골든 42건 실행 본체와 집계
+!evals/results/impact-claude-sonnet-5-20260825T214746Z.json
+!evals/results/impact-report.json
+# docs/21 §7 — 인용 밀도 대조
+!evals/results/citation-density-20260826T030940Z.json
+# docs/22 — 라우팅 사전 확인
+!evals/results/routing-precheck-20260826T034706Z.json
 
 # --- OS / 에디터 -------------------------------------------------------------
 .DS_Store
