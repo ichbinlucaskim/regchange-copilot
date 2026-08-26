@@ -82,7 +82,10 @@ async def test_graph_role_can_read_and_can_log_its_own_calls(role_connect: RoleC
         await cur.execute("SELECT count(*) FROM regulation_article")
         assert await cur.fetchone() is not None
         await cur.execute(
-            "INSERT INTO llm_invocation (id, invoked_at, model) VALUES (%s, %s, 'test')",
+            "INSERT INTO llm_invocation ("
+            "  id, invoked_at, purpose, prompt_template_id, prompt_template_sha256,"
+            "  model_id, api_version, request_params_json, outcome"
+            ") VALUES (%s, %s, 'TEST', 'test', repeat('a', 64), 'm', 'v', '{}'::jsonb, 'ERROR')",
             (uuid4(), NOW),
         )
         await cur.execute(
@@ -181,14 +184,27 @@ async def test_dispatch_role_cannot_create_its_own_work(role_connect: RoleConnec
 # ---------------------------------------------------------------------------
 
 
-async def test_review_role_can_change_status_but_not_body(role_connect: RoleConnect) -> None:
-    """컬럼 단위 권한 — 검토자는 상태를 바꾸고 본문은 고치지 않는다."""
+async def test_review_role_can_change_review_state_but_nothing_else(
+    role_connect: RoleConnect,
+) -> None:
+    """컬럼 단위 권한 — 검토자는 처리 상태만 바꾸고 기계의 판정과 본문은 못 고친다.
+
+    **이 테스트는 마이그레이션 011 에서 경계가 좁아지며 함께 좁아졌다.** 002·003 시절에는
+    `status` 가 사람의 처리 상태였고 검토자가 UPDATE 할 수 있었다. 011 이 그것을 둘로
+    갈랐다 — `status` 는 gate 가 정한 기계의 판정이라 **누구도 바꿀 수 없고**,
+    `review_state` 만 검토자가 바꾼다.
+
+    검토자가 `status` 를 고칠 수 있으면 "시스템은 근거 부족이라고 했는데 사람이 충분으로
+    고쳤다"가 기록에서 사라진다. 그 사실이야말로 6단계 평가가 봐야 할 것이다.
+    """
     conn = await role_connect(DbRole.REVIEW)
     async with conn.cursor() as cur:
-        await cur.execute("UPDATE impact_assessment SET status = 'APPROVED'")
+        await cur.execute("UPDATE impact_assessment SET review_state = 'ACCEPTED'")
     await conn.rollback()
 
-    await _expect_denied(conn, "UPDATE impact_assessment SET body = 'x'")
+    await _expect_denied(conn, "UPDATE impact_assessment SET status = 'OK'")
+    await _expect_denied(conn, "UPDATE impact_assessment SET draft_json = '{}'::jsonb")
+    await _expect_denied(conn, "UPDATE impact_assessment SET summary = 'x'")
 
 
 async def test_review_role_cannot_write_regulation_data(role_connect: RoleConnect) -> None:
