@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := help
 .PHONY: help setup up down migrate test lint typecheck fmt check clean \
         ops-run ops-history ops-summary ops-alerts ops-install ops-uninstall \
-        review-ui eval-impact eval-impact-deanchored eval-delegation
+        review-ui eval-impact eval-impact-deanchored eval-delegation eval-routing-precheck
 
 help: ## 사용 가능한 타깃을 출력한다
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -63,6 +63,9 @@ eval-impact-deanchored: ## gate 3단을 de-anchored 로 돌려 anchored 와 대�
 
 eval-delegation: ## 위임 승격 top_n 스윕 (R-22)
 	uv run --group eval python -m evals.runners.delegation_sweep
+
+eval-routing-precheck: ## 라우팅 사전 확인 — 기록과 검색만 읽는다 (LLM 미호출, $0)
+	uv run --group eval python -m evals.runners.routing_precheck
 
 ops-install: ## launchd 에 매일 07:00 KST 로 등록
 	./scripts/ops/install_launchd.sh

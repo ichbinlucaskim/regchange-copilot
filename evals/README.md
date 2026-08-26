@@ -42,6 +42,7 @@
 | `runners/obligation_eval.py` | 의무사항 추출과 gate 2단, 비용 | `docs/11-obligation-extraction-baseline.md` |
 | `runners/delegation_sweep.py` | 위임 승격 `top_n` (R-22) | `docs/12-delegation-promotion-results.md` |
 | `runners/impact_eval.py` | 영향평가·부서 배정·gate 3단·재작성률·비용 | `docs/12-impact-assessment-results.md` |
+| `runners/routing_precheck.py` | **라우팅 사전 확인** — 경량 경로 발동률·점수 분리 가능성·절감 상한. **LLM 미호출** | `docs/22-routing-precheck.md` |
 
 `impact_eval` 은 `--grounding anchored|de-anchored` 로 **gate 3단 검증기를 갈아 끼운다.**
 기본값은 `anchored`(4단계 기준선)이며, 두 검증기를 같은 골든셋으로 돌려 대조한 결과가

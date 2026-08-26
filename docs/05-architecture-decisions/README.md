@@ -29,7 +29,7 @@
 | [009](./adr-009-org-master-bitemporal.md) | 소관부처 마스터에도 bitemporal, 하드코딩 금지 | 채택됨 | 6, 2 | **R-20** | 1, 3 |
 | [010](./adr-010-adapter-layer.md) | 어댑터 6종 인터페이스 + AWS 구현체만, import-linter 강제 | 채택됨 | 4, 5 | — | **2** |
 | [012](./adr-012-external-xml-parsing.md) | `src/`는 `defusedxml`, `scripts/`는 표준 파서 — 신뢰 경계를 코드 위치로 | 채택됨 | 5 | — | **2** |
-| [013](./adr-013-agentic-pattern-selection.md) | **워크플로로 만든다** — 자율 에이전트 배제, chaining + gate + HITL. **evaluator-optimizer 는 실측으로 철회(2026-08-21)** | 채택됨 (일부 철회) | 1, 2, 3, 4, 5 | R-14 | 1, 3 |
+| [013](./adr-013-agentic-pattern-selection.md) | **워크플로로 만든다** — 자율 에이전트 배제, chaining + gate + HITL. **evaluator-optimizer 는 실측으로 철회(2026-08-21)**, **routing 은 근거를 교체하고 배제 유지(2026-08-26)** | 채택됨 (일부 철회) | 1, 2, 3, 4, 5 | R-14 | 1, 3 |
 | [014](./adr-014-local-cron-operations.md) | **로컬 노트북에서 매일 돌리고 실행 자체를 테이블에 기록** — launchd, 최근 7일 재확인 | 채택됨 | 1, 6 | R-11, R-21 | **3** |
 | [015](./adr-015-local-embedding.md) | **임베딩은 로컬 모델만 후보로 놓고 로컬끼리 재서 고른다** — KURE-v1 채택, 상용 API 는 후보 제외 | 채택됨 | 2, 5 | — | **2** |
 | [016](./adr-016-hybrid-retrieval.md) | 벡터 + 문자 bigram BM25 를 RRF 로 결합 — **사전 고정한 tie-break 이 판정했고 차이는 근소하다** | 채택됨 (근소) | 1, 2 | **R-22** | 1, 3 |
