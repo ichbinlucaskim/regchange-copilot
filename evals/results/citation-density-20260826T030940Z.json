@@ -1,0 +1,96 @@
+{
+  "measured_at": "2026-08-26T03:09:40.738748+00:00",
+  "as_of": "2026-02-01",
+  "sources_file": "expansion-sources-20260823T214811Z.json",
+  "definition": {
+    "unit": "조 1개",
+    "token_extractor": "evals.runners.baseline.article_tokens",
+    "other_law": "「법령명」 + 공백 0~1자 + 조 표기",
+    "internal": "본문 조 표기 - 타법 인용분 - 자기 조 번호",
+    "law_name_suffixes": [
+      "법",
+      "법률",
+      "시행령",
+      "시행규칙",
+      "규정",
+      "규칙"
+    ]
+  },
+  "internal": {
+    "name": "사내 규정 (policy_paragraph)",
+    "articles": 152,
+    "other_law_articles": 22,
+    "other_law_density": 0.1447,
+    "internal_articles": 38,
+    "internal_density": 0.25,
+    "both": 6,
+    "neither": 98,
+    "other_law_by_doc": {
+      "ISP-GUIDE-002": 5,
+      "ISP-GUIDE-003": 15,
+      "ISP-PROC-002": 2
+    }
+  },
+  "internal_density_prior": 0.1447,
+  "amended": {
+    "name": "개정 조문 (변경 표시된 조)",
+    "articles": 112,
+    "other_law_articles": 42,
+    "other_law_density": 0.375,
+    "internal_articles": 91,
+    "internal_density": 0.8125,
+    "both": 37,
+    "neither": 16,
+    "failures": [
+      {
+        "mst": "277569",
+        "reason": "snapshot_fallback: MST-277569-347b9f 으로 대체"
+      },
+      {
+        "mst": "284861",
+        "reason": "snapshot_fallback: MST-284861-1db9b5 으로 대체"
+      }
+    ],
+    "by_revision_kind": [
+      {
+        "name": "일부개정",
+        "articles": 66,
+        "other_law_articles": 23,
+        "other_law_density": 0.3485,
+        "internal_articles": 54,
+        "internal_density": 0.8182,
+        "both": 21,
+        "neither": 10
+      },
+      {
+        "name": "타법개정",
+        "articles": 46,
+        "other_law_articles": 19,
+        "other_law_density": 0.413,
+        "internal_articles": 37,
+        "internal_density": 0.8043,
+        "both": 16,
+        "neither": 6
+      }
+    ]
+  },
+  "all_articles": {
+    "name": "스냅샷 전체 조문 (참고)",
+    "articles": 2808,
+    "other_law_articles": 590,
+    "other_law_density": 0.2101,
+    "internal_articles": 1775,
+    "internal_density": 0.6321,
+    "both": 492,
+    "neither": 935,
+    "failures": []
+  },
+  "verdict": {
+    "internal_density": 0.1447,
+    "amended_density": 0.375,
+    "diff": 0.2303,
+    "standard_error": 0.0438,
+    "band": 0.0876,
+    "verdict": "AMENDMENT_HIGHER"
+  }
+}

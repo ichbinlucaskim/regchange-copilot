@@ -1,0 +1,1213 @@
+{
+  "result_file": "impact-claude-sonnet-5-20260825T214746Z.json",
+  "model": "claude-sonnet-5",
+  "cases": 42,
+  "by_type": {
+    "DECOY_ONLY": {
+      "n": 1,
+      "expected_status": "INSUFFICIENT_EVIDENCE",
+      "correct": 0,
+      "ratio": null,
+      "verdict": "TOO_FEW",
+      "hit": null,
+      "decoy_cited": 0,
+      "cases_wrong": [
+        "case-042"
+      ]
+    },
+    "EMPTY_NEW_PROVISION": {
+      "n": 2,
+      "expected_status": "INSUFFICIENT_EVIDENCE",
+      "correct": 1,
+      "ratio": null,
+      "verdict": "TOO_FEW",
+      "hit": null,
+      "decoy_cited": 1,
+      "cases_wrong": [
+        "case-013"
+      ]
+    },
+    "EMPTY_OUT_OF_SCOPE": {
+      "n": 5,
+      "expected_status": "INSUFFICIENT_EVIDENCE",
+      "correct": 5,
+      "ratio": 1.0,
+      "verdict": "OK",
+      "hit": null,
+      "decoy_cited": 0,
+      "cases_wrong": []
+    },
+    "EMPTY_PART_UNRELATED": {
+      "n": 3,
+      "expected_status": "INSUFFICIENT_EVIDENCE",
+      "correct": 3,
+      "ratio": 1.0,
+      "verdict": "OK",
+      "hit": null,
+      "decoy_cited": 0,
+      "cases_wrong": []
+    },
+    "IMPACT": {
+      "n": 20,
+      "expected_status": "not INSUFFICIENT_EVIDENCE",
+      "correct": 14,
+      "ratio": 0.7,
+      "verdict": "OK",
+      "hit": 13,
+      "decoy_cited": 0,
+      "cases_wrong": [
+        "case-002",
+        "case-006",
+        "case-022",
+        "case-023",
+        "case-024",
+        "case-025"
+      ]
+    },
+    "OTHER_LAW_B1_HIGH": {
+      "n": 4,
+      "expected_status": "INSUFFICIENT_EVIDENCE",
+      "correct": 4,
+      "ratio": 1.0,
+      "verdict": "OK",
+      "hit": null,
+      "decoy_cited": 0,
+      "cases_wrong": []
+    },
+    "OTHER_LAW_PLAIN": {
+      "n": 7,
+      "expected_status": "INSUFFICIENT_EVIDENCE",
+      "correct": 7,
+      "ratio": 1.0,
+      "verdict": "OK",
+      "hit": null,
+      "decoy_cited": 0,
+      "cases_wrong": []
+    }
+  },
+  "by_source": {
+    "273745": {
+      "law_name": "개인정보 보호법 시행령",
+      "existing": [],
+      "new": [
+        {
+          "case_id": "case-041",
+          "expected_outcome": "INSUFFICIENT_EVIDENCE",
+          "correct": true,
+          "hit": false
+        }
+      ],
+      "n": 1,
+      "correct": 1,
+      "all_same": false
+    },
+    "277377": {
+      "law_name": "정보통신망 이용촉진 및 정보보호 등에 관한 법률",
+      "existing": [],
+      "new": [
+        {
+          "case_id": "case-026",
+          "expected_outcome": "NO_IMPACT",
+          "correct": true,
+          "hit": false
+        },
+        {
+          "case_id": "case-027",
+          "expected_outcome": "NO_IMPACT",
+          "correct": true,
+          "hit": false
+        }
+      ],
+      "n": 2,
+      "correct": 2,
+      "all_same": true
+    },
+    "277569": {
+      "law_name": "정보통신망 이용촉진 및 정보보호 등에 관한 법률 시행령",
+      "existing": [],
+      "new": [
+        {
+          "case_id": "case-031",
+          "expected_outcome": "NO_IMPACT",
+          "correct": true,
+          "hit": false
+        },
+        {
+          "case_id": "case-032",
+          "expected_outcome": "NO_IMPACT",
+          "correct": true,
+          "hit": false
+        },
+        {
+          "case_id": "case-033",
+          "expected_outcome": "NO_IMPACT",
+          "correct": true,
+          "hit": false
+        },
+        {
+          "case_id": "case-034",
+          "expected_outcome": "NO_IMPACT",
+          "correct": true,
+          "hit": false
+        }
+      ],
+      "n": 4,
+      "correct": 4,
+      "all_same": true
+    },
+    "278161": {
+      "law_name": "개인정보 보호법 시행령",
+      "existing": [],
+      "new": [
+        {
+          "case_id": "case-028",
+          "expected_outcome": "NO_IMPACT",
+          "correct": true,
+          "hit": false
+        }
+      ],
+      "n": 1,
+      "correct": 1,
+      "all_same": false
+    },
+    "279313": {
+      "law_name": "정보통신망 이용촉진 및 정보보호 등에 관한 법률 시행령",
+      "existing": [],
+      "new": [
+        {
+          "case_id": "case-019",
+          "expected_outcome": "IMPACT",
+          "correct": true,
+          "hit": true
+        }
+      ],
+      "n": 1,
+      "correct": 1,
+      "all_same": false
+    },
+    "280277": {
+      "law_name": "전자금융거래법",
+      "existing": [
+        {
+          "case_id": "case-015",
+          "expected_outcome": "INSUFFICIENT_EVIDENCE",
+          "correct": true,
+          "hit": false
+        }
+      ],
+      "new": [],
+      "n": 1,
+      "correct": 1,
+      "all_same": false
+    },
+    "282481": {
+      "law_name": "정보통신망 이용촉진 및 정보보호 등에 관한 법률",
+      "existing": [
+        {
+          "case_id": "case-014",
+          "expected_outcome": "INSUFFICIENT_EVIDENCE",
+          "correct": true,
+          "hit": false
+        }
+      ],
+      "new": [
+        {
+          "case_id": "case-038",
+          "expected_outcome": "INSUFFICIENT_EVIDENCE",
+          "correct": true,
+          "hit": false
+        }
+      ],
+      "n": 2,
+      "correct": 2,
+      "all_same": true
+    },
+    "283179": {
+      "law_name": "신용정보의 이용 및 보호에 관한 법률 시행령",
+      "existing": [],
+      "new": [
+        {
+          "case_id": "case-023",
+          "expected_outcome": "IMPACT",
+          "correct": false,
+          "hit": false
+        },
+        {
+          "case_id": "case-024",
+          "expected_outcome": "IMPACT",
+          "correct": false,
+          "hit": false
+        }
+      ],
+      "n": 2,
+      "correct": 0,
+      "all_same": true
+    },
+    "283199": {
+      "law_name": "전기통신금융사기 피해 방지 및 피해금 환급에 관한 특별법",
+      "existing": [],
+      "new": [
+        {
+          "case_id": "case-042",
+          "expected_outcome": "INSUFFICIENT_EVIDENCE",
+          "correct": false,
+          "hit": false
+        }
+      ],
+      "n": 1,
+      "correct": 0,
+      "all_same": false
+    },
+    "283503": {
+      "law_name": "개인정보 보호법 시행령",
+      "existing": [
+        {
+          "case_id": "case-012",
+          "expected_outcome": "IMPACT",
+          "correct": true,
+          "hit": true
+        }
+      ],
+      "new": [
+        {
+          "case_id": "case-025",
+          "expected_outcome": "IMPACT",
+          "correct": false,
+          "hit": false
+        }
+      ],
+      "n": 2,
+      "correct": 1,
+      "all_same": false
+    },
+    "283839": {
+      "law_name": "개인정보 보호법",
+      "existing": [
+        {
+          "case_id": "case-007",
+          "expected_outcome": "IMPACT",
+          "correct": true,
+          "hit": true
+        },
+        {
+          "case_id": "case-008",
+          "expected_outcome": "IMPACT",
+          "correct": true,
+          "hit": true
+        },
+        {
+          "case_id": "case-009",
+          "expected_outcome": "IMPACT",
+          "correct": true,
+          "hit": true
+        },
+        {
+          "case_id": "case-010",
+          "expected_outcome": "IMPACT",
+          "correct": true,
+          "hit": true
+        }
+      ],
+      "new": [
+        {
+          "case_id": "case-020",
+          "expected_outcome": "IMPACT",
+          "correct": true,
+          "hit": true
+        },
+        {
+          "case_id": "case-021",
+          "expected_outcome": "IMPACT",
+          "correct": true,
+          "hit": true
+        },
+        {
+          "case_id": "case-022",
+          "expected_outcome": "IMPACT",
+          "correct": false,
+          "hit": false
+        }
+      ],
+      "n": 7,
+      "correct": 6,
+      "all_same": false
+    },
+    "283841": {
+      "law_name": "신용정보의 이용 및 보호에 관한 법률",
+      "existing": [
+        {
+          "case_id": "case-011",
+          "expected_outcome": "NO_IMPACT",
+          "correct": true,
+          "hit": false
+        }
+      ],
+      "new": [],
+      "n": 1,
+      "correct": 1,
+      "all_same": false
+    },
+    "283843": {
+      "law_name": "정보통신망 이용촉진 및 정보보호 등에 관한 법률",
+      "existing": [
+        {
+          "case_id": "case-003",
+          "expected_outcome": "NO_IMPACT",
+          "correct": true,
+          "hit": false
+        }
+      ],
+      "new": [],
+      "n": 1,
+      "correct": 1,
+      "all_same": false
+    },
+    "284861": {
+      "law_name": "정보통신망 이용촉진 및 정보보호 등에 관한 법률 시행령",
+      "existing": [],
+      "new": [
+        {
+          "case_id": "case-030",
+          "expected_outcome": "NO_IMPACT",
+          "correct": true,
+          "hit": false
+        }
+      ],
+      "n": 1,
+      "correct": 1,
+      "all_same": false
+    },
+    "285053": {
+      "law_name": "전기통신금융사기 피해 방지 및 피해자산 환급에 관한 특별법",
+      "existing": [],
+      "new": [
+        {
+          "case_id": "case-035",
+          "expected_outcome": "INSUFFICIENT_EVIDENCE",
+          "correct": true,
+          "hit": false
+        },
+        {
+          "case_id": "case-036",
+          "expected_outcome": "INSUFFICIENT_EVIDENCE",
+          "correct": true,
+          "hit": false
+        },
+        {
+          "case_id": "case-037",
+          "expected_outcome": "INSUFFICIENT_EVIDENCE",
+          "correct": true,
+          "hit": false
+        }
+      ],
+      "n": 3,
+      "correct": 3,
+      "all_same": true
+    },
+    "285199": {
+      "law_name": "정보통신망 이용촉진 및 정보보호 등에 관한 법률",
+      "existing": [
+        {
+          "case_id": "case-001",
+          "expected_outcome": "IMPACT",
+          "correct": true,
+          "hit": true
+        },
+        {
+          "case_id": "case-002",
+          "expected_outcome": "IMPACT",
+          "correct": false,
+          "hit": false
+        },
+        {
+          "case_id": "case-004",
+          "expected_outcome": "IMPACT",
+          "correct": true,
+          "hit": true
+        },
+        {
+          "case_id": "case-005",
+          "expected_outcome": "IMPACT",
+          "correct": true,
+          "hit": true
+        },
+        {
+          "case_id": "case-006",
+          "expected_outcome": "IMPACT",
+          "correct": false,
+          "hit": false
+        }
+      ],
+      "new": [
+        {
+          "case_id": "case-016",
+          "expected_outcome": "IMPACT",
+          "correct": true,
+          "hit": false
+        },
+        {
+          "case_id": "case-017",
+          "expected_outcome": "IMPACT",
+          "correct": true,
+          "hit": true
+        },
+        {
+          "case_id": "case-018",
+          "expected_outcome": "IMPACT",
+          "correct": true,
+          "hit": true
+        },
+        {
+          "case_id": "case-040",
+          "expected_outcome": "INSUFFICIENT_EVIDENCE",
+          "correct": true,
+          "hit": false
+        }
+      ],
+      "n": 9,
+      "correct": 7,
+      "all_same": false
+    },
+    "285727": {
+      "law_name": "전자금융거래법 시행령",
+      "existing": [],
+      "new": [
+        {
+          "case_id": "case-029",
+          "expected_outcome": "NO_IMPACT",
+          "correct": true,
+          "hit": false
+        }
+      ],
+      "n": 1,
+      "correct": 1,
+      "all_same": false
+    },
+    "285955": {
+      "law_name": "신용정보의 이용 및 보호에 관한 법률",
+      "existing": [
+        {
+          "case_id": "case-013",
+          "expected_outcome": "INSUFFICIENT_EVIDENCE",
+          "correct": false,
+          "hit": false
+        }
+      ],
+      "new": [],
+      "n": 1,
+      "correct": 0,
+      "all_same": false
+    },
+    "288033": {
+      "law_name": "정보통신망 이용촉진 및 정보보호 등에 관한 법률 시행령",
+      "existing": [],
+      "new": [
+        {
+          "case_id": "case-039",
+          "expected_outcome": "INSUFFICIENT_EVIDENCE",
+          "correct": true,
+          "hit": false
+        }
+      ],
+      "n": 1,
+      "correct": 1,
+      "all_same": false
+    }
+  },
+  "impact_concentration": {
+    "all": {
+      "n": 20,
+      "with_evidence": 14,
+      "hit_any": 13,
+      "with_evidence_ratio": 0.7,
+      "hit_ratio": 0.65,
+      "verdict": "OK",
+      "cases": [
+        "case-001",
+        "case-002",
+        "case-004",
+        "case-005",
+        "case-006",
+        "case-007",
+        "case-008",
+        "case-009",
+        "case-010",
+        "case-012",
+        "case-016",
+        "case-017",
+        "case-018",
+        "case-019",
+        "case-020",
+        "case-021",
+        "case-022",
+        "case-023",
+        "case-024",
+        "case-025"
+      ]
+    },
+    "excluding_concentrated": {
+      "n": 5,
+      "with_evidence": 2,
+      "hit_any": 2,
+      "with_evidence_ratio": 0.4,
+      "hit_ratio": 0.4,
+      "verdict": "OK",
+      "cases": [
+        "case-012",
+        "case-019",
+        "case-023",
+        "case-024",
+        "case-025"
+      ]
+    }
+  },
+  "b1_contrast": {
+    "b1_hit_we_missed": 3,
+    "we_hit_b1_missed": 10,
+    "both_hit": 4,
+    "note": "분모는 정답 문단이다. B-1 이 걸린 문단 중 정답이 아닌 것은 여기 안 센다",
+    "by_match_kind": {
+      "INTERNAL_REFERENCE": {
+        "n": 5,
+        "correct": 5,
+        "cases": [
+          "case-031",
+          "case-032",
+          "case-033",
+          "case-034",
+          "case-037"
+        ],
+        "ratio": 1.0,
+        "verdict": "OK"
+      },
+      "NOT_MATCHED": {
+        "n": 29,
+        "correct": 22,
+        "cases": [
+          "case-005",
+          "case-006",
+          "case-010",
+          "case-012",
+          "case-013",
+          "case-014",
+          "case-015",
+          "case-016",
+          "case-017",
+          "case-018",
+          "case-019",
+          "case-020",
+          "case-021",
+          "case-022",
+          "case-023",
+          "case-024",
+          "case-025",
+          "case-026",
+          "case-027",
+          "case-028",
+          "case-029",
+          "case-030",
+          "case-035",
+          "case-036",
+          "case-038",
+          "case-039",
+          "case-040",
+          "case-041",
+          "case-042"
+        ],
+        "ratio": 0.7586,
+        "verdict": "OK"
+      },
+      "OTHER_LAW_CITATION": {
+        "n": 8,
+        "correct": 7,
+        "cases": [
+          "case-001",
+          "case-002",
+          "case-003",
+          "case-004",
+          "case-007",
+          "case-008",
+          "case-009",
+          "case-011"
+        ],
+        "ratio": 0.875,
+        "verdict": "OK"
+      }
+    }
+  },
+  "by_difficulty": {
+    "EASY": {
+      "total": 8,
+      "hit": 5,
+      "recall": 0.625
+    },
+    "MEDIUM": {
+      "total": 42,
+      "hit": 9,
+      "recall": 0.2143
+    }
+  },
+  "a_vs_b": {
+    "denominator": "정답 문단 수 (케이스 수 아님)",
+    "scored_items": 50,
+    "counts": {
+      "A_NOT_RETRIEVED": 23,
+      "B_RETRIEVED_NOT_CITED": 13,
+      "OK": 14
+    },
+    "ratios": {
+      "A_NOT_RETRIEVED": 0.46,
+      "B_RETRIEVED_NOT_CITED": 0.26,
+      "OK": 0.28
+    },
+    "unknown_chunks": 0,
+    "per_case": [
+      {
+        "case_id": "case-001",
+        "verdict": "SCORED",
+        "expected": [
+          "ISP-GUIDE-002#35",
+          "ISP-PROC-002#7",
+          "ISP-PROC-002#8"
+        ],
+        "retrieved_hits": [
+          "ISP-GUIDE-002#35",
+          "ISP-PROC-002#7"
+        ],
+        "a_not_retrieved": [
+          "ISP-PROC-002#8"
+        ],
+        "b_retrieved_not_cited": [
+          "ISP-GUIDE-002#35"
+        ],
+        "ok": [
+          "ISP-PROC-002#7"
+        ],
+        "retrieved_total": 12
+      },
+      {
+        "case_id": "case-002",
+        "verdict": "SCORED",
+        "expected": [
+          "ISP-GUIDE-002#7",
+          "ISP-POL-001#6",
+          "ISP-PROC-001#6"
+        ],
+        "retrieved_hits": [
+          "ISP-GUIDE-002#7",
+          "ISP-POL-001#6"
+        ],
+        "a_not_retrieved": [
+          "ISP-PROC-001#6"
+        ],
+        "b_retrieved_not_cited": [
+          "ISP-GUIDE-002#7",
+          "ISP-POL-001#6"
+        ],
+        "ok": [],
+        "retrieved_total": 12
+      },
+      {
+        "case_id": "case-003",
+        "verdict": "NOT_APPLICABLE"
+      },
+      {
+        "case_id": "case-004",
+        "verdict": "SCORED",
+        "expected": [
+          "ISP-GUIDE-002#19",
+          "ISP-GUIDE-002#20",
+          "ISP-PROC-001#24"
+        ],
+        "retrieved_hits": [
+          "ISP-GUIDE-002#19",
+          "ISP-GUIDE-002#20"
+        ],
+        "a_not_retrieved": [
+          "ISP-PROC-001#24"
+        ],
+        "b_retrieved_not_cited": [],
+        "ok": [
+          "ISP-GUIDE-002#19",
+          "ISP-GUIDE-002#20"
+        ],
+        "retrieved_total": 13
+      },
+      {
+        "case_id": "case-005",
+        "verdict": "SCORED",
+        "expected": [
+          "ISP-GUIDE-002#38",
+          "ISP-GUIDE-002#8",
+          "ISP-POL-001#15",
+          "ISP-POL-001#8"
+        ],
+        "retrieved_hits": [
+          "ISP-GUIDE-002#38",
+          "ISP-GUIDE-002#8"
+        ],
+        "a_not_retrieved": [
+          "ISP-POL-001#15",
+          "ISP-POL-001#8"
+        ],
+        "b_retrieved_not_cited": [
+          "ISP-GUIDE-002#38"
+        ],
+        "ok": [
+          "ISP-GUIDE-002#8"
+        ],
+        "retrieved_total": 13
+      },
+      {
+        "case_id": "case-006",
+        "verdict": "SCORED",
+        "expected": [
+          "ISP-PROC-002#19",
+          "ISP-PROC-002#4"
+        ],
+        "retrieved_hits": [
+          "ISP-PROC-002#19",
+          "ISP-PROC-002#4"
+        ],
+        "a_not_retrieved": [],
+        "b_retrieved_not_cited": [
+          "ISP-PROC-002#19",
+          "ISP-PROC-002#4"
+        ],
+        "ok": [],
+        "retrieved_total": 12
+      },
+      {
+        "case_id": "case-007",
+        "verdict": "SCORED",
+        "expected": [
+          "ISP-GUIDE-003#5",
+          "ISP-GUIDE-003#6",
+          "ISP-POL-001#7"
+        ],
+        "retrieved_hits": [
+          "ISP-GUIDE-003#5",
+          "ISP-GUIDE-003#6",
+          "ISP-POL-001#7"
+        ],
+        "a_not_retrieved": [],
+        "b_retrieved_not_cited": [
+          "ISP-GUIDE-003#6",
+          "ISP-POL-001#7"
+        ],
+        "ok": [
+          "ISP-GUIDE-003#5"
+        ],
+        "retrieved_total": 12
+      },
+      {
+        "case_id": "case-008",
+        "verdict": "SCORED",
+        "expected": [
+          "ISP-GUIDE-003#26",
+          "ISP-PROC-002#11",
+          "ISP-PROC-002#8"
+        ],
+        "retrieved_hits": [
+          "ISP-GUIDE-003#26",
+          "ISP-PROC-002#11"
+        ],
+        "a_not_retrieved": [
+          "ISP-PROC-002#8"
+        ],
+        "b_retrieved_not_cited": [
+          "ISP-GUIDE-003#26"
+        ],
+        "ok": [
+          "ISP-PROC-002#11"
+        ],
+        "retrieved_total": 14
+      },
+      {
+        "case_id": "case-009",
+        "verdict": "SCORED",
+        "expected": [
+          "ISP-GUIDE-003#17"
+        ],
+        "retrieved_hits": [
+          "ISP-GUIDE-003#17"
+        ],
+        "a_not_retrieved": [],
+        "b_retrieved_not_cited": [],
+        "ok": [
+          "ISP-GUIDE-003#17"
+        ],
+        "retrieved_total": 12
+      },
+      {
+        "case_id": "case-010",
+        "verdict": "SCORED",
+        "expected": [
+          "ISP-GUIDE-003#5",
+          "ISP-POL-001#5"
+        ],
+        "retrieved_hits": [
+          "ISP-GUIDE-003#5",
+          "ISP-POL-001#5"
+        ],
+        "a_not_retrieved": [],
+        "b_retrieved_not_cited": [
+          "ISP-GUIDE-003#5"
+        ],
+        "ok": [
+          "ISP-POL-001#5"
+        ],
+        "retrieved_total": 12
+      },
+      {
+        "case_id": "case-011",
+        "verdict": "NOT_APPLICABLE"
+      },
+      {
+        "case_id": "case-012",
+        "verdict": "SCORED",
+        "expected": [
+          "ISP-GUIDE-002#31",
+          "ISP-GUIDE-003#31"
+        ],
+        "retrieved_hits": [
+          "ISP-GUIDE-002#31",
+          "ISP-GUIDE-003#31"
+        ],
+        "a_not_retrieved": [],
+        "b_retrieved_not_cited": [
+          "ISP-GUIDE-003#31"
+        ],
+        "ok": [
+          "ISP-GUIDE-002#31"
+        ],
+        "retrieved_total": 13
+      },
+      {
+        "case_id": "case-013",
+        "verdict": "NOT_APPLICABLE"
+      },
+      {
+        "case_id": "case-014",
+        "verdict": "NOT_APPLICABLE"
+      },
+      {
+        "case_id": "case-015",
+        "verdict": "NOT_APPLICABLE"
+      },
+      {
+        "case_id": "case-016",
+        "verdict": "SCORED",
+        "expected": [
+          "ISP-PROC-001#18",
+          "ISP-PROC-002#14",
+          "ISP-PROC-002#16"
+        ],
+        "retrieved_hits": [],
+        "a_not_retrieved": [
+          "ISP-PROC-001#18",
+          "ISP-PROC-002#14",
+          "ISP-PROC-002#16"
+        ],
+        "b_retrieved_not_cited": [],
+        "ok": [],
+        "retrieved_total": 12
+      },
+      {
+        "case_id": "case-017",
+        "verdict": "SCORED",
+        "expected": [
+          "ISP-POL-001#14",
+          "ISP-PROC-002#8",
+          "ISP-PROC-002#9"
+        ],
+        "retrieved_hits": [
+          "ISP-POL-001#14"
+        ],
+        "a_not_retrieved": [
+          "ISP-PROC-002#8",
+          "ISP-PROC-002#9"
+        ],
+        "b_retrieved_not_cited": [],
+        "ok": [
+          "ISP-POL-001#14"
+        ],
+        "retrieved_total": 11
+      },
+      {
+        "case_id": "case-018",
+        "verdict": "SCORED",
+        "expected": [
+          "ISP-GUIDE-002#19",
+          "ISP-GUIDE-002#20",
+          "ISP-POL-001#15"
+        ],
+        "retrieved_hits": [
+          "ISP-GUIDE-002#19"
+        ],
+        "a_not_retrieved": [
+          "ISP-GUIDE-002#20",
+          "ISP-POL-001#15"
+        ],
+        "b_retrieved_not_cited": [],
+        "ok": [
+          "ISP-GUIDE-002#19"
+        ],
+        "retrieved_total": 12
+      },
+      {
+        "case_id": "case-019",
+        "verdict": "SCORED",
+        "expected": [
+          "ISP-GUIDE-002#19",
+          "ISP-POL-001#15"
+        ],
+        "retrieved_hits": [
+          "ISP-GUIDE-002#19"
+        ],
+        "a_not_retrieved": [
+          "ISP-POL-001#15"
+        ],
+        "b_retrieved_not_cited": [],
+        "ok": [
+          "ISP-GUIDE-002#19"
+        ],
+        "retrieved_total": 12
+      },
+      {
+        "case_id": "case-020",
+        "verdict": "SCORED",
+        "expected": [
+          "ISP-GUIDE-002#17",
+          "ISP-GUIDE-003#14",
+          "ISP-POL-001#16"
+        ],
+        "retrieved_hits": [
+          "ISP-GUIDE-003#14"
+        ],
+        "a_not_retrieved": [
+          "ISP-GUIDE-002#17",
+          "ISP-POL-001#16"
+        ],
+        "b_retrieved_not_cited": [],
+        "ok": [
+          "ISP-GUIDE-003#14"
+        ],
+        "retrieved_total": 13
+      },
+      {
+        "case_id": "case-021",
+        "verdict": "SCORED",
+        "expected": [
+          "ISP-GUIDE-003#20"
+        ],
+        "retrieved_hits": [
+          "ISP-GUIDE-003#20"
+        ],
+        "a_not_retrieved": [],
+        "b_retrieved_not_cited": [],
+        "ok": [
+          "ISP-GUIDE-003#20"
+        ],
+        "retrieved_total": 13
+      },
+      {
+        "case_id": "case-022",
+        "verdict": "SCORED",
+        "expected": [
+          "ISP-GUIDE-003#16",
+          "ISP-GUIDE-003#26",
+          "ISP-PROC-002#11"
+        ],
+        "retrieved_hits": [
+          "ISP-GUIDE-003#16"
+        ],
+        "a_not_retrieved": [
+          "ISP-GUIDE-003#26",
+          "ISP-PROC-002#11"
+        ],
+        "b_retrieved_not_cited": [
+          "ISP-GUIDE-003#16"
+        ],
+        "ok": [],
+        "retrieved_total": 12
+      },
+      {
+        "case_id": "case-023",
+        "verdict": "SCORED",
+        "expected": [
+          "ISP-GUIDE-003#12",
+          "ISP-GUIDE-003#36"
+        ],
+        "retrieved_hits": [
+          "ISP-GUIDE-003#36"
+        ],
+        "a_not_retrieved": [
+          "ISP-GUIDE-003#12"
+        ],
+        "b_retrieved_not_cited": [
+          "ISP-GUIDE-003#36"
+        ],
+        "ok": [],
+        "retrieved_total": 13
+      },
+      {
+        "case_id": "case-024",
+        "verdict": "SCORED",
+        "expected": [
+          "ISP-GUIDE-003#16"
+        ],
+        "retrieved_hits": [],
+        "a_not_retrieved": [
+          "ISP-GUIDE-003#16"
+        ],
+        "b_retrieved_not_cited": [],
+        "ok": [],
+        "retrieved_total": 12
+      },
+      {
+        "case_id": "case-025",
+        "verdict": "SCORED",
+        "expected": [
+          "ISP-GUIDE-002#31",
+          "ISP-GUIDE-003#30",
+          "ISP-GUIDE-003#31"
+        ],
+        "retrieved_hits": [],
+        "a_not_retrieved": [
+          "ISP-GUIDE-002#31",
+          "ISP-GUIDE-003#30",
+          "ISP-GUIDE-003#31"
+        ],
+        "b_retrieved_not_cited": [],
+        "ok": [],
+        "retrieved_total": 13
+      },
+      {
+        "case_id": "case-026",
+        "verdict": "NOT_APPLICABLE"
+      },
+      {
+        "case_id": "case-027",
+        "verdict": "NOT_APPLICABLE"
+      },
+      {
+        "case_id": "case-028",
+        "verdict": "NOT_APPLICABLE"
+      },
+      {
+        "case_id": "case-029",
+        "verdict": "NOT_APPLICABLE"
+      },
+      {
+        "case_id": "case-030",
+        "verdict": "NOT_APPLICABLE"
+      },
+      {
+        "case_id": "case-031",
+        "verdict": "NOT_APPLICABLE"
+      },
+      {
+        "case_id": "case-032",
+        "verdict": "NOT_APPLICABLE"
+      },
+      {
+        "case_id": "case-033",
+        "verdict": "NOT_APPLICABLE"
+      },
+      {
+        "case_id": "case-034",
+        "verdict": "NOT_APPLICABLE"
+      },
+      {
+        "case_id": "case-035",
+        "verdict": "NOT_APPLICABLE"
+      },
+      {
+        "case_id": "case-036",
+        "verdict": "NOT_APPLICABLE"
+      },
+      {
+        "case_id": "case-037",
+        "verdict": "NOT_APPLICABLE"
+      },
+      {
+        "case_id": "case-038",
+        "verdict": "NOT_APPLICABLE"
+      },
+      {
+        "case_id": "case-039",
+        "verdict": "NOT_APPLICABLE"
+      },
+      {
+        "case_id": "case-040",
+        "verdict": "NOT_APPLICABLE"
+      },
+      {
+        "case_id": "case-041",
+        "verdict": "NOT_APPLICABLE"
+      },
+      {
+        "case_id": "case-042",
+        "verdict": "NOT_APPLICABLE"
+      }
+    ]
+  },
+  "a_vs_b_breakdown": {
+    "note": "정답 문단이 있는 케이스만 분모에 든다. 「영향 없음」 유형은 정답 문단이 없으므로 (a)/(b) 가 정의되지 않는다 — 「케이스에 해당 없음」이다",
+    "not_applicable_types": [
+      "DECOY_ONLY",
+      "EMPTY_NEW_PROVISION",
+      "EMPTY_OUT_OF_SCOPE",
+      "EMPTY_PART_UNRELATED",
+      "OTHER_LAW_B1_HIGH",
+      "OTHER_LAW_PLAIN"
+    ],
+    "by_type": {
+      "IMPACT": {
+        "items": 50,
+        "cases": 20,
+        "OK": 14,
+        "A_NOT_RETRIEVED": 23,
+        "B_RETRIEVED_NOT_CITED": 13,
+        "ratios": {
+          "OK": 0.28,
+          "A_NOT_RETRIEVED": 0.46,
+          "B_RETRIEVED_NOT_CITED": 0.26
+        }
+      }
+    },
+    "by_era": {
+      "existing": {
+        "items": 26,
+        "cases": 10,
+        "OK": 9,
+        "A_NOT_RETRIEVED": 6,
+        "B_RETRIEVED_NOT_CITED": 11,
+        "ratios": {
+          "OK": 0.3462,
+          "A_NOT_RETRIEVED": 0.2308,
+          "B_RETRIEVED_NOT_CITED": 0.4231
+        }
+      },
+      "new": {
+        "items": 24,
+        "cases": 10,
+        "OK": 5,
+        "A_NOT_RETRIEVED": 17,
+        "B_RETRIEVED_NOT_CITED": 2,
+        "ratios": {
+          "OK": 0.2083,
+          "A_NOT_RETRIEVED": 0.7083,
+          "B_RETRIEVED_NOT_CITED": 0.0833
+        }
+      }
+    }
+  },
+  "cost": {
+    "estimated_cost_usd": 3.9736,
+    "cache_hit_ratio": 0.3874,
+    "billed_input_tokens": 695657,
+    "output_tokens": 306288
+  }
+}
