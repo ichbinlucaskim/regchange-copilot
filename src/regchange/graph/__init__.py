@@ -23,4 +23,24 @@
       초안을 사람에게 보여주면 승인 절차가 검토가 아니라 통과 의식이 된다.
     - 장기 미승인: 상태를 만료시키되 삭제하지 않는다. 미승인 이력도 감사 대상이다.
     - 재개 시 입력 변경: 체크포인트에 기록된 입력과 다르면 이어서 실행하지 않는다.
+      `Command(resume=...)` 는 판단만 전달하며 상태는 체크포인트의 것을 쓴다.
+    - **상태에 도메인 객체를 넣지 않는다.** 체크포인터의 직렬화기가 dataclass 의 `tuple` 을
+      `list` 로 되돌리는 것을 실측했다 (ADR-018). 상태는 평범한 사전이고 복원은 우리
+      파서가 한다 (`graph/state.py`).
 """
+
+from regchange.graph.build import CHECKPOINT_SCHEMA, build_graph, checkpointer
+from regchange.graph.nodes import GraphDeps
+from regchange.graph.runner import GraphRunner, open_runner
+from regchange.graph.state import AssessmentState, ReviewDecisionKind
+
+__all__ = [
+    "CHECKPOINT_SCHEMA",
+    "AssessmentState",
+    "GraphDeps",
+    "GraphRunner",
+    "ReviewDecisionKind",
+    "build_graph",
+    "checkpointer",
+    "open_runner",
+]

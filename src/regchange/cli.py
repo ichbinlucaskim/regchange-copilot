@@ -49,6 +49,7 @@ import psycopg
 from regchange.adapters.storage.local import LocalDocumentStore
 from regchange.config.corpus import load_corpus_config
 from regchange.config.settings import apply_dotenv, law_api_base_url, law_api_oc, snapshot_root
+from regchange.guards.killswitch import Switch
 from regchange.ingest.client import LawApiClient
 from regchange.ingest.masking import Masker
 from regchange.ingest.snapshot import new_run_id, utc_now
@@ -66,6 +67,7 @@ from regchange.ops import (
 from regchange.ops.history import DEFAULT_ALERT_DAYS, DEFAULT_HISTORY_DAYS
 from regchange.ops.models import OpsRunStatus
 from regchange.ops.render import render_alerts, render_daily, render_history, render_summary
+from regchange.ops.switches import current_switches, set_switch, switch_history
 from regchange.pipeline import AutoDiffOutcome, autodiff
 from regchange.store.changeset import compute_change_set
 from regchange.store.dsn import owner_dsn
@@ -265,6 +267,48 @@ async def _cmd_ops_alerts(days: int) -> int:
     return await _with_conn(query)
 
 
+def _cmd_review_serve(host: str, port: int) -> int:
+    """검토 UI 를 띄운다. 승인은 **그래프 재개로만** 이루어진다 (원칙 4).
+
+    목적:
+        담당자가 검토 대기 목록을 보고 수락·수정·반려를 보내는 화면을 연다.
+
+    구현 이유:
+        `resume` 을 여기서 조립해 앱에 주입한다. API 모듈이 그래프를 만들면 검토 화면이
+        모델·임베딩·커넥션 구성에 결합되고, 테스트가 화면을 띄우려면 실제 모델이 필요해진다.
+
+        요청마다 러너를 새로 연다. 커넥션·체크포인터를 앱 수명 동안 붙들고 있으면 유휴
+        커넥션이 오래 열려 있게 되고, 검토는 며칠에 한 번 일어나는 일이다.
+
+    트레이드오프:
+        재개마다 임베딩 클라이언트를 만든다. 로컬 임베딩은 로딩이 무겁지만, 승인 이후
+        노드는 검색을 하지 않으므로 실제로 쓰이지 않는다 — 그럼에도 만드는 이유는
+        `GraphDeps` 가 완전한 조립을 요구하기 때문이며, 부분 조립을 허용하면 어느 노드가
+        무엇을 쓰는지가 조립부의 지식이 된다.
+
+    엣지 케이스:
+        - 승인 대기가 아닌 스레드를 재개: 그래프가 아무 노드도 실행하지 않고 API 가 409 를
+          돌려준다. 조용히 성공으로 보이지 않는다.
+    """
+    import uvicorn
+
+    from regchange.adapters.embedding.local import LocalEmbeddingClient
+    from regchange.adapters.llm.claude import ClaudeClient
+    from regchange.api.app import create_app
+    from regchange.graph.runner import open_runner
+
+    async def resume(thread_id: str, decision: dict[str, Any]) -> dict[str, Any]:
+        async with open_runner(
+            llm=ClaudeClient(),
+            embedding=LocalEmbeddingClient(),
+            store=LocalDocumentStore(snapshot_root()),
+        ) as runner:
+            return await runner.resume(thread_id, decision)
+
+    uvicorn.run(create_app(resume=resume), host=host, port=port, log_level="info")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     """명령 트리를 만든다. 테스트가 인자 파싱만 검증할 수 있게 분리했다."""
     parser = argparse.ArgumentParser(prog="regchange", description="법령 버전 조회와 조문 차분")
@@ -306,10 +350,38 @@ def build_parser() -> argparse.ArgumentParser:
 
     ops_sub.add_parser("summary", help="운영 시작일부터 오늘까지의 집계")
 
-    alerts = ops_sub.add_parser("alerts", help="MISMATCH·변경규모·연속 0건·카나리아 실패")
+    alerts = ops_sub.add_parser("alerts", help="MISMATCH·변경규모·연속 0건·카나리아 실패·검토 기한")
     alerts.add_argument("--days", type=int, default=DEFAULT_ALERT_DAYS)
 
+    review = sub.add_parser("review", help="검토 큐")
+    review_sub = review.add_subparsers(dest="command", required=True)
+    serve = review_sub.add_parser("serve", help="검토 UI 를 띄운다")
+    serve.add_argument("--host", default="127.0.0.1")
+    serve.add_argument("--port", type=int, default=8000)
+
+    switch = sub.add_parser("switch", help="킬 스위치 — 재배포 없이 기능을 멈춘다")
+    switch_sub = switch.add_subparsers(dest="command", required=True)
+    switch_sub.add_parser("list", help="현재 값과 마지막 변경 사유")
+    switch_history_cmd = switch_sub.add_parser("history", help="변경 이력 (감사용)")
+    switch_history_cmd.add_argument("--name", choices=[s.value for s in Switch], default=None)
+    switch_history_cmd.add_argument("--limit", type=int, default=20)
+    for verb, enabled in (("on", True), ("off", False)):
+        action = switch_sub.add_parser(verb, help=f"스위치를 {'켠다' if enabled else '끈다'}")
+        action.add_argument("name", choices=[s.value for s in Switch])
+        # --by 와 --reason 은 필수다. 기본값을 두면 기본값이 기록된다.
+        action.add_argument("--by", required=True, help="바꾸는 사람")
+        action.add_argument("--reason", required=True, help="왜 바꾸는가 (필수)")
+
     return parser
+
+
+def _dispatch_switch(args: argparse.Namespace) -> int:
+    """`switch` 하위 명령을 고른다."""
+    if args.command == "list":
+        return asyncio.run(_cmd_switch_list())
+    if args.command == "history":
+        return asyncio.run(_cmd_switch_history(args.name, args.limit))
+    return asyncio.run(_cmd_switch_set(args.name, args.command == "on", args.by, args.reason))
 
 
 def _dispatch_ops(args: argparse.Namespace) -> int:
@@ -324,6 +396,61 @@ def _dispatch_ops(args: argparse.Namespace) -> int:
     return asyncio.run(_cmd_ops_alerts(args.days))
 
 
+async def _cmd_switch_list() -> int:
+    """스위치 현재 값과 마지막 변경 사유를 출력한다."""
+
+    async def query(conn: psycopg.AsyncConnection[Any]) -> list[str]:
+        current = await current_switches(conn)
+        lines = ["킬 스위치 현재 상태", ""]
+        for switch in Switch:
+            state = current.get(switch.value)
+            if state is None:
+                lines.append(f"  {switch.value:<18} 꺼짐 (설정된 적 없음 — 기본값)")
+                continue
+            mark = "켜짐" if state.enabled else "꺼짐"
+            lines.append(
+                f"  {switch.value:<18} {mark}  ({state.changed_by}, "
+                f"{state.changed_at:%Y-%m-%d %H:%M %Z}) — {state.reason}"
+            )
+        lines.extend(["", "반영은 최대 60초 걸린다. 즉시 반영이 필요하면 프로세스를 재시작한다."])
+        return lines
+
+    return await _with_conn(query)
+
+
+async def _cmd_switch_history(name: str | None, limit: int) -> int:
+    """스위치 변경 이력을 최신순으로 출력한다. 감사 질문의 답이 여기 있다."""
+
+    async def query(conn: psycopg.AsyncConnection[Any]) -> list[str]:
+        rows = await switch_history(conn, switch=Switch(name) if name else None, limit=limit)
+        if not rows:
+            return ["변경 이력이 없다. 스위치가 설정된 적이 없으면 전부 꺼짐이다."]
+        lines = ["킬 스위치 변경 이력 (최신순)", ""]
+        for row in rows:
+            mark = "켜짐" if row.enabled else "꺼짐"
+            until = "" if row.known_until.year > 9000 else f" → {row.known_until:%Y-%m-%d %H:%M}"
+            lines.append(
+                f"  {row.known_from:%Y-%m-%d %H:%M}{until}  {row.name:<18} {mark}  "
+                f"{row.changed_by}: {row.reason}"
+            )
+        return lines
+
+    return await _with_conn(query)
+
+
+async def _cmd_switch_set(name: str, enabled: bool, by: str, reason: str) -> int:
+    """스위치를 켜거나 끈다. **소유자 커넥션으로 쓴다** — 서비스 role 에는 권한이 없다."""
+    async with await psycopg.AsyncConnection.connect(owner_dsn()) as conn:
+        await set_switch(conn, switch=Switch(name), enabled=enabled, changed_by=by, reason=reason)
+    _emit_all(
+        [
+            f"{name} = {'켜짐' if enabled else '꺼짐'} ({by}: {reason})",
+            "반영까지 최대 60초. 즉시 필요하면 프로세스를 재시작한다.",
+        ]
+    )
+    return 0
+
+
 def main() -> None:
     """인자를 파싱하고 해당 명령을 실행한다. `.env` 로딩이 첫 단계다."""
     args = build_parser().parse_args()
@@ -331,6 +458,10 @@ def main() -> None:
 
     if args.group == "ops":
         code = _dispatch_ops(args)
+    elif args.group == "switch":
+        code = _dispatch_switch(args)
+    elif args.group == "review":
+        code = _cmd_review_serve(args.host, args.port)
     elif args.group == "law":
         code = asyncio.run(_cmd_law_previous(args.mst))
     elif args.command == "auto":

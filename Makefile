@@ -1,6 +1,7 @@
 .DEFAULT_GOAL := help
 .PHONY: help setup up down migrate test lint typecheck fmt check clean \
-        ops-run ops-history ops-summary ops-alerts ops-install ops-uninstall
+        ops-run ops-history ops-summary ops-alerts ops-install ops-uninstall \
+        review-ui eval-impact eval-impact-deanchored eval-delegation
 
 help: ## 사용 가능한 타깃을 출력한다
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -50,6 +51,18 @@ ops-summary: ## 운영 시작일부터 오늘까지의 집계
 
 ops-alerts: ## 최근 7일 알림 (MISMATCH · 변경규모 · 연속 0건 · 카나리아)
 	uv run regchange ops alerts
+
+review-ui: ## 검토 UI (http://127.0.0.1:8000) — 승인은 그래프 재개로만 이루어진다
+	uv run regchange review serve
+
+eval-impact: ## 영향평가 + gate 3단(anchored) 골든셋 측정 — 4단계 기준선
+	uv run --group eval python -m evals.runners.impact_eval --model sonnet
+
+eval-impact-deanchored: ## gate 3단을 de-anchored 로 돌려 anchored 와 대조한다
+	uv run --group eval python -m evals.runners.impact_eval --model sonnet --grounding de-anchored
+
+eval-delegation: ## 위임 승격 top_n 스윕 (R-22)
+	uv run --group eval python -m evals.runners.delegation_sweep
 
 ops-install: ## launchd 에 매일 07:00 KST 로 등록
 	./scripts/ops/install_launchd.sh

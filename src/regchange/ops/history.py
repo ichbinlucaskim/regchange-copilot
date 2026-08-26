@@ -45,6 +45,7 @@ import psycopg
 from psycopg.rows import dict_row
 
 from regchange.ops.models import OPS_CALENDAR_OFFSET, OpsRunStatus
+from regchange.review.queue import count_overdue
 
 
 class OpsQueryError(RuntimeError):
@@ -101,6 +102,16 @@ class AlertKind(StrEnum):
 
     CONSECUTIVE_ZERO = "CONSECUTIVE_ZERO"
     """연속 0건이 임계를 넘었다. 코퍼스 설정이나 요청 파라미터를 의심한다."""
+
+    REVIEW_OVERDUE = "REVIEW_OVERDUE"
+    """검토 대기 건이 기한(개정 시행일)을 넘겼다. **담당자를 재촉할 사실이다.**"""
+
+    REVIEW_DUE_UNKNOWN = "REVIEW_DUE_UNKNOWN"
+    """검토 대기 건의 기한을 모른다 — 개정 조문의 시행일을 확보하지 못했다.
+
+    `REVIEW_OVERDUE` 와 **합치지 않는다.** 전자는 담당자를 재촉할 사실이고 이것은
+    수집 경로를 고칠 사실이다. 조치가 다르면 지표도 달라야 한다. 임의의 기본 기한으로
+    채우면 이 구별이 사라지고 근거 없는 숫자가 운영 지표가 된다 (마이그레이션 011 §5)."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -457,6 +468,33 @@ async def fetch_alerts(
                         ),
                     )
                 )
+
+    # 검토 큐 — 4단계에서 붙었다. 알림을 보낼 곳은 여전히 없고 조회 명령이 전부다.
+    review = await count_overdue(conn, now=now)
+    if review.overdue:
+        alerts.append(
+            Alert(
+                kind=AlertKind.REVIEW_OVERDUE,
+                occurred_at=now,
+                subject=f"검토 기한 초과 {review.overdue}건 (대기 {review.pending}건)",
+                detail=(
+                    "기한은 개정 조문의 시행일이다. 시행일까지 사내 규정이 정비되어 "
+                    f"있어야 하며, 가장 오래 기다린 건이 {review.oldest_pending_days}일째다"
+                ),
+            )
+        )
+    if review.unknown_due:
+        alerts.append(
+            Alert(
+                kind=AlertKind.REVIEW_DUE_UNKNOWN,
+                occurred_at=now,
+                subject=f"기한을 모르는 검토 대기 {review.unknown_due}건",
+                detail=(
+                    "개정 조문의 시행일을 확보하지 못한 건이다. 기한 초과로 세지 않는다 — "
+                    "재촉할 사실이 아니라 수집 경로를 고칠 사실이다"
+                ),
+            )
+        )
 
     streak, span = await consecutive_zero(conn, now=now)
     if span >= CONSECUTIVE_ZERO_ALERT_DAYS:
