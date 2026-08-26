@@ -37,6 +37,7 @@ from urllib.parse import urlsplit, urlunsplit
 import psycopg
 import pytest
 
+from regchange.guards.killswitch import Switch, SwitchGate, static_gate
 from regchange.store.dsn import (
     CONNECT_TIMEOUT_SECONDS,
     DbRole,
@@ -63,6 +64,19 @@ TRUNCATED_TABLES = (
     "change_set",
     "ops_law_outcome",
     "ops_run",
+    # 사내 규정 코퍼스 (009). 임베딩은 문단을 CASCADE 로 따라간다.
+    "policy_paragraph_embedding",
+    "policy_paragraph",
+    "policy_document",
+    "llm_invocation",
+    # 검토 큐 (011). FK 순서는 CASCADE 가 처리하지만 의존 순서대로 적는다.
+    "action_outbox",
+    "review_decision",
+    "impact_assessment",
+    # 킬 스위치 (013). 이력 테이블이지만 **테스트 DB 에서는** 비운다 — 스위치 이력이
+    # 테스트 사이에 남으면 다음 테스트의 시각이 과거가 되어 known_from < known_until 이
+    # 깨진다. 운영 DB 에서는 이 경로가 애초에 열리지 않는다 (접미사 가드).
+    "kill_switch",
 )
 """테스트마다 비우는 테이블.
 
@@ -165,3 +179,28 @@ async def role_connect(
     finally:
         for conn in opened:
             await conn.close()
+
+
+@pytest.fixture
+def switches_on() -> SwitchGate:
+    """검색·LLM 이 켜진 게이트.
+
+    테스트가 실제 `kill_switch` 행에 좌우되면, 스위치를 끄는 순간 **관계없는 테스트가
+    무더기로 깨지고** 그 소음 속에서 정작 발화 테스트의 실패가 묻힌다. 그래서 값을
+    고정한다 — 검사 로직은 그대로이며 값의 출처만 다르다 (우회 플래그가 아니다).
+
+    `DISPATCH` 는 일부러 넣지 않는다. 넣지 않으면 `NEVER_SET`(꺼짐)이고, 발송이 기본
+    꺼짐이라는 사실을 테스트가 자연스럽게 상속한다.
+    """
+    return static_gate({Switch.RETRIEVAL: True, Switch.LLM: True})
+
+
+@pytest.fixture
+def role_test_dsn() -> Callable[[DbRole], str]:
+    """role 별 **테스트 DB** DSN 문자열.
+
+    커넥션이 아니라 DSN 이 필요한 어댑터(`PostgresSwitchStore`)를 위한 것이다.
+    운영 DB 를 가리키지 않도록 `in_test_database` 를 반드시 지난다 —
+    사건 기록: `docs/incidents/test-truncated-operations-history.md`.
+    """
+    return lambda role: in_test_database(role_dsn(role))

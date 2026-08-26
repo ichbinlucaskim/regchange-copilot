@@ -73,8 +73,20 @@
 ## 4. 킬 스위치는 fail-closed다
 
 `LLM_ENABLED`·`RETRIEVAL_ENABLED`·`DISPATCH_ENABLED`의 기본값은 **꺼짐**이다.
-설정 누락·오타·파싱 실패는 전부 "꺼짐"으로 수렴한다.
-`tests/security/test_kill_switch_defaults.py`가 `.env.example`의 기본값을 검사한다.
+설정 누락·조회 실패는 전부 "꺼짐"으로 수렴한다 — **모르면 안 한다.**
+
+**2026-08-21 부터 실동작한다** (ADR-019). 그전까지는 `.env.example` 의 세 줄과 그 값을
+검사하는 테스트만 있었고 **읽는 코드가 없었다.** 지금은 상태가 `kill_switch` 테이블에
+있고(bitemporal, 누가 언제 왜 바꿨는지가 행으로 남는다), `guards/killswitch.py` 가
+검색·모델 호출·발송의 진입에서 검사하며, 꺼져 있으면 **예외로 멈춘다** — 빈 결과를
+돌려주지 않는다. 빈 결과는 하류에서 "영향 없음"으로 읽히기 때문이다.
+
+멈춘 이유는 셋으로 구별된다: `OFF`(누가 껐다) / `NEVER_SET`(켠 적 없다) /
+`UNAVAILABLE`(상태를 못 읽었다). 조치가 다르므로 값이 다르다.
+
+**어떤 서비스 role 도 스위치를 켤 수 없다.** 쓰기 권한은 소유자에게만 있고, 인젝션이
+성립하더라도 스위치를 켜는 경로가 없다. `tests/security/test_kill_switches.py` 가
+발화(꺼면 실제로 안 도는가)와 권한(LLM role 이 못 켜는가)을 함께 검사한다.
 
 ---
 
