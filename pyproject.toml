@@ -17,8 +17,10 @@ dependencies = [
     "structlog>=24.4",
     "pyyaml>=6.0.3",
     "types-pyyaml>=6.0.12.20260724",
+    "anthropic>=0.40",
     "defusedxml>=0.7.1",
     "types-defusedxml>=0.7.0.20260504",
+    "langgraph-checkpoint-postgres>=2.0",
 ]
 
 [dependency-groups]
@@ -28,6 +30,12 @@ dev = [
     "ruff>=0.8",
     "mypy>=1.13",
     "import-linter>=2.13",
+]
+# 로컬 임베딩 모델은 torch 를 끌고 온다(수 GB). 수집·파싱·차분 경로는 임베딩을 쓰지
+# 않으므로 기본 의존성에 넣지 않는다. 운영에서 외부 API 임베딩을 쓰기로 결정하면
+# 이 그룹을 설치하지 않아도 된다 — `uv sync --group eval` 로만 들어온다.
+eval = [
+    "sentence-transformers>=3.0",
 ]
 
 [build-system]
@@ -126,7 +134,9 @@ disallow_any_explicit = false  # 외부 경계에서만 Any 허용 (CLAUDE.md §
 show_error_codes = true
 
 [[tool.mypy.overrides]]
-module = ["pgvector.*", "langgraph.*", "langchain_postgres.*"]
+# sentence_transformers 는 타입 스텁을 제공하지 않는다. 어댑터 구현이 이미 그 경계를
+# `Any` 로 좁혀 두었고(CLAUDE.md §4 의 "외부 경계"), 도메인 코드는 Protocol 만 본다.
+module = ["pgvector.*", "langgraph.*", "langchain_postgres.*", "sentence_transformers.*"]
 ignore_missing_imports = true
 
 # ---------------------------------------------------------------------------
@@ -153,6 +163,18 @@ source_modules = ["regchange.ingest"]
 forbidden_modules = ["regchange.adapters.storage.local"]
 
 [[tool.importlinter.contracts]]
+# ADR-010: 검색 계층은 임베딩 Protocol 만 본다. 구체 구현을 import 하면 "로컬 모델이냐
+# 외부 API 냐"라는 **배포 형태의 결정**(클라우드 심의 결과에 좌우된다 — 축 2)이 도메인
+# 코드에 박힌다. 조립은 측정 스크립트와 4단계 그래프 구성이 한다.
+name = "retrieval 은 임베딩 어댑터의 구체 구현을 import 하지 않는다 (인터페이스만)"
+type = "forbidden"
+source_modules = ["regchange.retrieval"]
+forbidden_modules = [
+    "regchange.adapters.embedding.local",
+    "regchange.adapters.embedding.openai",
+]
+
+[[tool.importlinter.contracts]]
 # CLAUDE.md §8 / 원칙 5: dispatch 워커는 승인 레코드만 보고 동작한다.
 # 프롬프트나 모델 출력을 보는 경로가 생기면 원칙 5가 무너진 것이다.
 # 2026-08-11 현재 dispatch 에 코드가 없다. 계약을 먼저 걸어 둔다.
@@ -162,6 +184,20 @@ source_modules = ["regchange.dispatch"]
 forbidden_modules = [
     "regchange.graph",
     "regchange.prompts",
+    "regchange.adapters.llm",
+]
+
+[[tool.importlinter.contracts]]
+# 원칙 5 / ADR-018: 검토 큐는 초안을 **사전(JSON)** 으로 다룬다. `prompts` 를 알기
+# 시작하면 초안 스키마가 바뀔 때마다 큐가 함께 움직이고, 더 중요하게는 `dispatch` 가
+# 나중에 이 패키지를 쓸 때 프롬프트를 간접 import 하게 된다 — 원칙 5 가 금지하는 방향이다.
+# `graph` 를 금지하는 이유는 방향이다: 그래프가 검토 큐를 쓰고 그 반대가 아니다.
+name = "review 는 prompts / graph / LLM 어댑터를 import 하지 않는다 (원칙 5, ADR-018)"
+type = "forbidden"
+source_modules = ["regchange.review"]
+forbidden_modules = [
+    "regchange.prompts",
+    "regchange.graph",
     "regchange.adapters.llm",
 ]
 
@@ -187,6 +223,10 @@ forbidden_modules = [
 # ---------------------------------------------------------------------------
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# 저장소 루트를 import 경로에 넣는다. `evals` 는 설치 대상이 아니라 측정 코드지만,
+# **측정 인프라도 테스트 대상이다** — 러너가 실패를 성공으로 보고한 사건(2026-08-22)
+# 이후 `tests/integration/test_call_failure_is_not_silent.py` 가 러너를 직접 부른다.
+pythonpath = ["."]
 asyncio_mode = "auto"
 addopts = "-ra --strict-markers --strict-config"
 markers = [
