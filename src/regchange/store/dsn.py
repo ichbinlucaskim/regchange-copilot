@@ -122,12 +122,15 @@ def assert_disposable_database(database: str) -> str:
 
 
 class DbRole(StrEnum):
-    """접속 role 4종. 이름은 `003_roles_and_grants.sql` 과 같아야 한다."""
+    """접속 role 5종. 이름은 `003_roles_and_grants.sql` / `009_policy_corpus.sql` 과 같아야 한다."""
 
     INGEST = "app_ingest"
     GRAPH = "app_graph"
     REVIEW = "app_review"
     DISPATCH = "app_dispatch"
+    POLICY = "app_policy"
+    """사내 규정 코퍼스 적재 전용 (009). 법령 테이블에는 SELECT 조차 없다 — 규정 적재가
+    법령을 읽을 이유가 없고, 읽을 수 있으면 "여기서 같이 처리하면 편한데"가 반드시 생긴다."""
 
 
 def owner_dsn() -> str:
