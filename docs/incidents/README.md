@@ -23,6 +23,9 @@
 |---|---|
 | [silent-undercounting.md](./silent-undercounting.md) | 조용한 누락 3건 + 미수 2건 — 집계·수집·추출에서 적게 센 사건, 그리고 적게 셀 뻔한 경위 |
 | [test-truncated-operations-history.md](./test-truncated-operations-history.md) | **테스트가 운영 이력을 지웠다** — 개발 행위가 운영 데이터를 파괴한 사건. 계산이 틀린 것이 아니라 **되돌릴 수 없는 손실**이 발생했다 |
+| [llm-api-schema-drift.md](./llm-api-schema-drift.md) | **미수 3** — 설계한 스키마가 외부 API 사실과 어긋나 있었다. 법제처는 실측했는데 LLM API 는 기억으로 그렸다 |
+| [measurement-reported-failure-as-success.md](./measurement-reported-failure-as-success.md) | **측정 러너가 전량 실패를 100% 정답으로 보고했다** — API 크레딧이 소진돼 아무 호출도 성공하지 않았는데 「EMPTY 이관 3/3」이라는 만점이 나왔다. 파이프라인이 호출 실패를 `INSUFFICIENT_EVIDENCE` 로 바꿔치기하고 있었다 |
+| [assumptions-that-crossed-a-boundary.md](./assumptions-that-crossed-a-boundary.md) | **결함 2건** — 우리가 실측으로 정한 근거가 다음 단계로 넘어오며 무효가 됐는데 아무도 다시 읽지 않았다. 하나는 **실패한 호출이 기록되지 않게** 했고, 하나는 **지표가 우리 상수를 재게** 했다 |
 
 **미수도 적는다.** 같은 기전이 재발했으나 결론이 틀리지 않은 경우다. 값이 맞았다는
 이유로 지우면 "우리 방어가 잡았다"와 "이번엔 운이 좋았다"를 구별할 수 없게 된다.
@@ -34,6 +37,8 @@
 |---|---|---|---|
 | 조용한 누락 (`silent-undercounting.md`) | 적게 셌다 | 남아 있다 | **탐지** — 다른 방식으로 다시 센다 |
 | 조용한 파괴 (`test-truncated-operations-history.md`) | 있던 것이 사라졌다 | 없다 | **예방** — 탐지로는 늦다 |
+| 전제의 낡음 (`llm-api-schema-drift.md`) | 우리가 믿은 외부 사실이 더 이상 사실이 아니다 | 해당 없음 | **실측** — 착수 전에 외부 계약을 다시 읽는다 |
+| 전제의 낡음 — 내부 (`assumptions-that-crossed-a-boundary.md`) | **우리가 정한 근거**가 다른 단계에서 더 이상 성립하지 않는다 | 남아 있다(docstring) | **재확인** — 상수·예외 범위를 재사용할 때 그 근거를 인용해 유효성을 적는다 |
 
 앞의 계열은 재계산으로 되돌아온다. 뒤의 계열은 되돌아오지 않으므로 사후 확인이
 아니라 **작업 전 가드**가 유일한 수단이다.
