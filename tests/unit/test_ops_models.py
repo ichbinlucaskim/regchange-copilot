@@ -4,6 +4,11 @@
 보나"는 `lookback_dates` 가 정한다. 둘 다 경계 조건이 본체다 — 오늘을 포함하면 등재
 지연이 0건으로 위장하고, 부분 실패를 성공으로 접으면 실패가 사라진다. 그 경계를
 DB 없이 고정한다.
+
+`zero_streak_verdict` 도 같은 이유로 여기 있다. **연속 0건 알람은 코퍼스 설정이 조용히
+깨졌을 때 울리는 유일한 안전망인데, 그 카운터가 상태 하나(`SKIPPED_CANARY_FAILED`)에
+걸려 무력화돼 있었다** (`docs/incidents/safety-net-silently-disabled.md`). 다섯 상태를
+전부 고정해 두지 않으면 상태가 늘 때 같은 일이 반복된다.
 """
 
 from __future__ import annotations
@@ -19,8 +24,10 @@ from regchange.ops.models import (
     LawOutcome,
     LawOutcomeStatus,
     OpsRunStatus,
+    ZeroStreakVerdict,
     derive_status,
     lookback_dates,
+    zero_streak_verdict,
 )
 
 KST_MORNING = dt.datetime(2026, 8, 19, 22, 0, tzinfo=dt.UTC)
@@ -149,3 +156,66 @@ def test_enacted_law_counts_as_processed() -> None:
         derive_status(canary_passed=True, probes=probes, outcomes=outcomes)
         is OpsRunStatus.SUCCEEDED
     )
+
+
+# ---------------------------------------------------------------------------
+# zero_streak_verdict — 다섯 상태를 전부 고정한다
+# ---------------------------------------------------------------------------
+
+
+def test_zero_run_is_counted() -> None:
+    """`SUCCEEDED_ZERO` 가 이 알람의 계수 대상이다."""
+    assert (
+        zero_streak_verdict(OpsRunStatus.SUCCEEDED_ZERO, laws_detected=0) is ZeroStreakVerdict.COUNT
+    )
+
+
+def test_a_capture_breaks_the_streak() -> None:
+    """포착이 있었으면 「마지막 포착 이후」가 거기서 다시 시작한다."""
+    assert zero_streak_verdict(OpsRunStatus.SUCCEEDED, laws_detected=3) is ZeroStreakVerdict.BREAK
+
+
+def test_canary_failure_is_skipped_not_a_break() -> None:
+    """이번 결함의 본체다 — 수집을 안 한 실행은 포착의 증거도 부재의 증거도 아니다.
+
+    끊으면 카나리아가 임계(60일)보다 자주 실패할 때 **알람이 영원히 울리지 않는다.**
+    7일 운영에서 이미 한 번 실패했으므로 가정이 아니라 관측된 조건이다.
+    """
+    assert (
+        zero_streak_verdict(OpsRunStatus.SKIPPED_CANARY_FAILED, laws_detected=0)
+        is ZeroStreakVerdict.SKIP
+    )
+
+
+def test_a_fully_failed_poll_is_skipped_not_counted() -> None:
+    """전량 실패는 0 을 관측한 것이 아니다.
+
+    세면 **수집 실패가 「개정 없음」으로 위장**한다 — R-11 이 정의한 최상위 위험이다.
+    끊으면 안전망이 무력화된다. 그래서 세 번째 값이 있다.
+    """
+    assert zero_streak_verdict(OpsRunStatus.FAILED, laws_detected=0) is ZeroStreakVerdict.SKIP
+
+
+def test_partial_with_an_intersection_breaks() -> None:
+    """일부 실패했어도 코퍼스 교집합이 있었으면 spec 경로는 살아 있다."""
+    assert zero_streak_verdict(OpsRunStatus.PARTIAL, laws_detected=1) is ZeroStreakVerdict.BREAK
+
+
+def test_partial_without_an_intersection_is_counted() -> None:
+    """전량 실패가 아니므로 성공한 폴링이 있었고, 그 폴링이 0 을 봤다."""
+    assert zero_streak_verdict(OpsRunStatus.PARTIAL, laws_detected=0) is ZeroStreakVerdict.COUNT
+
+
+def test_every_status_has_a_verdict() -> None:
+    """**「그 외는 끊는다」로 뭉개지 않는다** — 그것이 이번 결함의 원인이었다.
+
+    새 상태가 추가되면 `assert_never` 가 mypy 에서 걸리지만, 그 검사는 `make lint`
+    에만 있다. 열거 자체를 테스트로도 고정해 둔다.
+    """
+    verdicts = {status: zero_streak_verdict(status, laws_detected=0) for status in OpsRunStatus}
+    assert len(verdicts) == len(OpsRunStatus)
+    assert set(verdicts.values()) == {
+        ZeroStreakVerdict.COUNT,
+        ZeroStreakVerdict.BREAK,
+        ZeroStreakVerdict.SKIP,
+    }

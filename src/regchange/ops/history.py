@@ -44,7 +44,12 @@ from typing import Any
 import psycopg
 from psycopg.rows import dict_row
 
-from regchange.ops.models import OPS_CALENDAR_OFFSET, OpsRunStatus
+from regchange.ops.models import (
+    OPS_CALENDAR_OFFSET,
+    OpsRunStatus,
+    ZeroStreakVerdict,
+    zero_streak_verdict,
+)
 from regchange.review.queue import count_overdue
 
 
@@ -345,14 +350,41 @@ async def consecutive_zero(
 ) -> tuple[int, int]:
     """(연속 0건 실행 수, 그 구간의 달력 일수)를 돌려준다.
 
-    가장 최근 실행부터 거슬러 올라가며 `SUCCEEDED_ZERO`가 이어지는 동안 센다.
-    달력 일수를 함께 돌려주는 이유는 실행이 드문드문한 경우 "3회 연속"이 실제로는
-    두 달일 수 있기 때문이다 — 실행 수만 보면 그 사실이 숨는다.
+    목적:
+        「마지막 포착 이후 며칠인가」를 센다. 이 값이 임계를 넘으면 코퍼스 설정이나
+        요청 파라미터가 조용히 깨졌다는 신호다 (`daily.extract_detected` 가 지목한
+        안전망).
+
+    구현 이유:
+        가장 최근 실행부터 거슬러 올라가되 **판정을 `zero_streak_verdict` 에 맡긴다.**
+        상태별 판정을 이 함수 안에서 하면 상태가 늘 때 여기서 조용히 기본 분기로
+        떨어지고, **그것이 실제로 일어난 결함이다** — `SKIPPED_CANARY_FAILED` 가
+        「`SUCCEEDED_ZERO` 가 아니다」는 이유로 구간을 끊어 9회 연속 0건이 0 으로
+        보고됐다 (`docs/incidents/safety-net-silently-disabled.md`).
+
+        달력 일수를 함께 돌려주는 이유는 실행이 드문드문한 경우 "3회 연속"이
+        실제로는 두 달일 수 있기 때문이다 — 실행 수만 보면 그 사실이 숨는다.
+        **일수는 계수한 실행 중 가장 오래된 것부터 잰다** — 건너뛴 실행을 기점으로
+        삼으면 관측하지 못한 구간이 0건 구간에 포함된다.
+
+    트레이드오프:
+        `ops_run` 전체를 읽는다. 행이 하루 1~2개이므로 수년치가 수천 행이며 지금은
+        문제가 아니다. `LIMIT` 을 걸면 **건너뛰는 상태가 창 앞을 채웠을 때 구간이
+        조용히 잘린다** — 그 절단은 알람을 덜 울리는 방향이라 이 함수에서 가장
+        피해야 하는 실패다.
+
+    엣지 케이스:
+        - 행이 없음: `(0, 0)`.
+        - 계수 대상이 하나도 없음(전부 건너뜀·끊김): `(0, 0)`. 「0건이 없었다」가
+          아니라 「셀 것이 없었다」이며 둘 다 알람을 울리지 않는 것이 맞다.
+        - 최근 실행이 건너뛰는 상태: **그 뒤의 0건 구간을 그대로 이어서 센다.**
+          이 함수가 고쳐진 이유가 정확히 이 경우다.
+        - 끊김보다 뒤에 있는 0건: 세지 않는다. 마지막 포착 **이후**만이 대상이다.
     """
     async with conn.cursor(row_factory=dict_row) as cur:
         await cur.execute(
             """
-            SELECT status, started_at
+            SELECT status, laws_detected, started_at
               FROM ops_run
              ORDER BY started_at DESC
             """
@@ -362,8 +394,13 @@ async def consecutive_zero(
     streak = 0
     oldest: dt.datetime | None = None
     for run in runs:
-        if OpsRunStatus(run["status"]) is not OpsRunStatus.SUCCEEDED_ZERO:
+        verdict = zero_streak_verdict(
+            OpsRunStatus(run["status"]), laws_detected=int(run["laws_detected"])
+        )
+        if verdict is ZeroStreakVerdict.BREAK:
             break
+        if verdict is ZeroStreakVerdict.SKIP:
+            continue
         streak += 1
         oldest = run["started_at"]
     if oldest is None:
