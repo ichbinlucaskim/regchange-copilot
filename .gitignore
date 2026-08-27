@@ -53,6 +53,12 @@ evals/results/*
 !evals/results/citation-density-20260826T030940Z.json
 # docs/22 — 라우팅 사전 확인
 !evals/results/routing-precheck-20260826T034706Z.json
+# docs/23 §2 — 인용 적합도 판정지의 재료 (사람 판정 전 상태)
+!evals/results/citation-adequacy.json
+# docs/23 §3 — 검정력 분석
+!evals/results/power-analysis-20260826T191554Z.json
+# docs/23 §7.1 — 42건 베이스라인 대조
+!evals/results/baseline-20260826T190756Z.json
 
 # --- OS / 에디터 -------------------------------------------------------------
 .DS_Store

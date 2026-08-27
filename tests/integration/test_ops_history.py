@@ -247,3 +247,167 @@ async def test_a_non_zero_run_resets_the_streak(
     )
 
     assert await consecutive_zero(owner_conn, now=NOW) == (0, 0)
+
+
+async def test_a_canary_failure_does_not_break_the_zero_streak(
+    owner_conn: psycopg.AsyncConnection[Any],
+) -> None:
+    """**이번 결함의 재현 테스트다.**
+
+    `SKIPPED_CANARY_FAILED` 가 구간을 끊으면, 카나리아가 임계(60일)보다 자주 실패할 때
+    연속 0건 알람이 영원히 울리지 않는다. 수집을 하지 않은 실행은 포착의 증거도 부재의
+    증거도 아니므로 **끊는 것이 아니라 건너뛰어야** 한다.
+    """
+    for offset in (5, 4, 3, 1):
+        await record_run(
+            owner_conn,
+            _result(
+                started_at=NOW - dt.timedelta(days=offset),
+                status=OpsRunStatus.SUCCEEDED_ZERO,
+                seed=f"i{offset:03d}",
+            ),
+        )
+    await record_run(
+        owner_conn,
+        _result(
+            started_at=NOW - dt.timedelta(days=2),
+            status=OpsRunStatus.SKIPPED_CANARY_FAILED,
+            seed="i002",
+        ),
+    )
+
+    streak, span = await consecutive_zero(owner_conn, now=NOW)
+
+    assert streak == 4
+    assert span == 5
+
+
+async def test_the_alert_fires_across_a_canary_failure(
+    owner_conn: psycopg.AsyncConnection[Any],
+) -> None:
+    """**발화까지 확인한다.** 카운터가 이어지는 것만으로는 안전망이 산다고 할 수 없다.
+
+    고치기 전에는 이 이력에서 알람이 나오지 않았다 — 가장 최근 실행이 카나리아 실패라
+    구간이 0 회로 끊겼기 때문이다.
+    """
+    for offset in (100, 3):
+        await record_run(
+            owner_conn,
+            _result(
+                started_at=NOW - dt.timedelta(days=offset),
+                status=OpsRunStatus.SUCCEEDED_ZERO,
+                seed=f"j{offset:03d}",
+            ),
+        )
+    await record_run(
+        owner_conn,
+        _result(
+            started_at=NOW - dt.timedelta(days=1),
+            status=OpsRunStatus.SKIPPED_CANARY_FAILED,
+            seed="j001",
+        ),
+    )
+
+    alerts = await fetch_alerts(owner_conn, days=7, now=NOW)
+
+    kinds = [alert.kind for alert in alerts]
+    assert AlertKind.CONSECUTIVE_ZERO in kinds
+    zero_alert = next(a for a in alerts if a.kind is AlertKind.CONSECUTIVE_ZERO)
+    assert "2회" in zero_alert.subject
+    assert "100일" in zero_alert.subject
+
+
+async def test_a_fully_failed_run_is_also_skipped(
+    owner_conn: psycopg.AsyncConnection[Any],
+) -> None:
+    """전량 실패도 관측이 없다.
+
+    세면 수집 실패가 「개정 없음」이 되고(R-11), 끊으면 안전망이 죽는다.
+    """
+    for offset in (4, 2):
+        await record_run(
+            owner_conn,
+            _result(
+                started_at=NOW - dt.timedelta(days=offset),
+                status=OpsRunStatus.SUCCEEDED_ZERO,
+                seed=f"k{offset:03d}",
+            ),
+        )
+    await record_run(
+        owner_conn,
+        _result(started_at=NOW - dt.timedelta(days=3), status=OpsRunStatus.FAILED, seed="k003"),
+    )
+
+    assert await consecutive_zero(owner_conn, now=NOW) == (2, 4)
+
+
+async def test_a_partial_run_that_saw_the_corpus_breaks_the_streak(
+    owner_conn: psycopg.AsyncConnection[Any],
+) -> None:
+    """일부 실패했어도 코퍼스 교집합이 있었으면 spec 경로는 살아 있다 — 끊는다."""
+    await record_run(
+        owner_conn,
+        _result(
+            started_at=NOW - dt.timedelta(days=4),
+            status=OpsRunStatus.SUCCEEDED_ZERO,
+            seed="l004",
+        ),
+    )
+    await record_run(
+        owner_conn,
+        _result(
+            started_at=NOW - dt.timedelta(days=2),
+            status=OpsRunStatus.PARTIAL,
+            seed="l002",
+            outcomes=(_failed_law("TransportError: 본문 수집 실패"),),
+        ),
+    )
+    await record_run(
+        owner_conn,
+        _result(
+            started_at=NOW - dt.timedelta(days=1),
+            status=OpsRunStatus.SUCCEEDED_ZERO,
+            seed="l001",
+        ),
+    )
+
+    assert await consecutive_zero(owner_conn, now=NOW) == (1, 1)
+
+
+async def test_a_partial_run_without_an_intersection_is_counted(
+    owner_conn: psycopg.AsyncConnection[Any],
+) -> None:
+    """교집합이 0 이면 성공한 폴링이 0 을 본 것이다 — 센다."""
+    for offset, status in ((3, OpsRunStatus.SUCCEEDED_ZERO), (2, OpsRunStatus.PARTIAL)):
+        await record_run(
+            owner_conn,
+            _result(
+                started_at=NOW - dt.timedelta(days=offset), status=status, seed=f"m{offset:03d}"
+            ),
+        )
+
+    assert await consecutive_zero(owner_conn, now=NOW) == (2, 3)
+
+
+async def test_the_span_is_measured_from_the_oldest_counted_run(
+    owner_conn: psycopg.AsyncConnection[Any],
+) -> None:
+    """건너뛴 실행을 기점으로 삼으면 관측하지 못한 구간이 0건 구간에 들어온다."""
+    await record_run(
+        owner_conn,
+        _result(
+            started_at=NOW - dt.timedelta(days=90),
+            status=OpsRunStatus.SKIPPED_CANARY_FAILED,
+            seed="n090",
+        ),
+    )
+    await record_run(
+        owner_conn,
+        _result(
+            started_at=NOW - dt.timedelta(days=10),
+            status=OpsRunStatus.SUCCEEDED_ZERO,
+            seed="n010",
+        ),
+    )
+
+    assert await consecutive_zero(owner_conn, now=NOW) == (1, 10)

@@ -27,6 +27,7 @@ from __future__ import annotations
 import datetime as dt
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import assert_never
 from uuid import UUID
 
 from regchange.ingest.canary import CanaryResult, IngestRunStatus
@@ -285,6 +286,115 @@ def lookback_dates(now: dt.datetime, days: int) -> tuple[str, ...]:
     return tuple(
         (today - dt.timedelta(days=offset)).strftime("%Y%m%d") for offset in range(days, 0, -1)
     )
+
+
+class ZeroStreakVerdict(StrEnum):
+    """연속 0건 카운터가 실행 하나를 어떻게 다룰 것인가 — **셋으로 가른다**.
+
+    목적:
+        「마지막 포착 이후 며칠인가」를 세는 카운터에서, 실행 하나가 계수 대상인지
+        구간을 끊는지 아무 정보도 없는지를 구별한다.
+
+    구현 이유:
+        **불리언 하나로 두면 「0건이 아니다」와 「관측이 없다」가 같은 값이 된다.**
+        그것이 실제로 일어난 결함이다 — 카나리아 실패 실행이 `SUCCEEDED_ZERO` 가
+        아니라는 이유로 구간을 끊어, 9회 연속 0건이 카운터에서 0 으로 보였다
+        (`docs/incidents/safety-net-silently-disabled.md`).
+
+        상태 뭉갬 감사(`docs/19-state-conflation-audit.md`)가 「호출부가 세거나
+        분기하는 값은 반환 타입으로 구별한다」고 적은 규칙의 적용이다. 이 값은
+        정확히 호출부가 분기하는 값이다.
+
+    트레이드오프:
+        상태 5종을 세 갈래로 접으므로 「왜 건너뛰었는가」(카나리아 실패인가 전량
+        실패인가)는 이 타입에 남지 않는다. 그 구별이 필요한 곳은 `ops history` 이며
+        거기서는 원래 상태를 그대로 본다 — **집계축과 상세를 나눈 `derive_status`
+        의 트레이드오프와 같은 형태다.**
+
+    엣지 케이스:
+        - 전부 `SKIP` 인 이력: 연속 0건 0회. 「0건이 없었다」가 아니라 「셀 것이
+          없었다」이며, 두 경우 모두 알람을 울리지 않는 것이 맞다.
+    """
+
+    COUNT = "COUNT"
+    """0건이 **관측됐다.** 연속 구간에 더한다."""
+
+    BREAK = "BREAK"
+    """코퍼스 교집합이 **있었다.** 여기서 구간이 끝난다."""
+
+    SKIP = "SKIP"
+    """포착의 증거도 부재의 증거도 아니다. **끊지 않고 지나간다.**"""
+
+
+def zero_streak_verdict(status: OpsRunStatus, *, laws_detected: int) -> ZeroStreakVerdict:
+    """실행 하나가 연속 0건 구간에서 어떤 역할인가 — **다섯 상태를 전부 열거한다**.
+
+    목적:
+        연속 0건 알람이 세는 대상을 한 곳에 못박는다.
+
+    구현 이유:
+        이 카운터가 묻는 것은 **「코퍼스 교집합이 0인 실행이 연속 몇 회인가」**다.
+        `daily.py` 의 `extract_detected` 가 이 알람을 안전망으로 지목하며 적은
+        문장이 그 정의를 준다 — "spec 경로가 통째로 틀렸다면 **교집합이 0이 되어**
+        `SUCCEEDED_ZERO` 가 연속되고, 연속 0건 알람이 그것을 잡는다".
+
+        따라서 판정의 축은 「상태가 `SUCCEEDED_ZERO` 인가」가 아니라
+        **「교집합을 관측했는가, 관측했다면 0이었는가」**다. 상태만 보면 관측이
+        없었던 실행이 관측된 0 과 같은 자리에서 처리된다.
+
+        | 상태 | 판정 | 근거 |
+        |---|---|---|
+        | `SUCCEEDED` | `BREAK` | 처리한 법령이 있다. 정의상 교집합이 있었다 |
+        | `SUCCEEDED_ZERO` | `COUNT` | 폴링이 정상이고 교집합이 0 이었다.
+          **이 알람의 계수 대상** |
+        | `PARTIAL` | 교집합으로 가른다 | 일부 날짜·법령이 실패했으나 성공한 폴링이
+          있었다. `laws_detected > 0` 이면 교집합이 있었으므로 `BREAK`, 0 이면
+          성공한 폴링에서 0 을 본 것이므로 `COUNT` |
+        | `FAILED` | `SKIP` | 폴링한 날짜가 **전부** 실패했다. 0 을 관측한 것이
+          아니라 아무것도 관측하지 못했다 |
+        | `SKIPPED_CANARY_FAILED` | `SKIP` | 수집 자체를 하지 않았다.
+          **미수행이며 실패도 0건 관측도 아니다** |
+
+        `FAILED` 와 `SKIPPED_CANARY_FAILED` 를 `BREAK` 로 두면 **안전망이 무력화된다**
+        — 그 상태가 임계(60일)보다 자주 나타나면 구간이 매번 끊겨 알람이 영원히
+        울리지 않는다. 7일 운영에서 카나리아 실패가 이미 한 번 나왔으므로 이것은
+        가정이 아니라 관측된 조건이다.
+
+        그렇다고 `COUNT` 로 둘 수도 없다. 관측하지 못한 날을 0건으로 세면 **수집
+        실패가 「개정 없음」으로 위장**하며, 그것이 R-11 이 정의한 최상위 위험이다.
+        **끊지도 세지도 않는 세 번째 값이 있어야 하는 이유가 이것이다.**
+
+        `FAILED` 가 이어지는 것은 그 자체로 문제이나 **이 알람의 일이 아니다** —
+        `ops_run` 에 행이 남고 `ops summary` 의 실패일수와 `ops history` 가 그것을
+        보여준다. 한 알람에 두 실패를 묶으면 하나를 고치고 "해결됐다"가 된다
+        (R-28/R-29 를 나눠 등재한 것과 같은 판단).
+
+    트레이드오프:
+        `SUCCEEDED` 는 `laws_detected` 를 보지 않고 `BREAK` 로 정한다.
+        `derive_status` 상 `SUCCEEDED` 는 처리한 법령이 있을 때만 나오므로 두 값이
+        어긋날 수 없고, 여기서 다시 세면 「무엇이 포착인가」의 정의가 두 곳에 생긴다.
+        어긋난다면 그것은 이 함수가 아니라 `derive_status` 나 적재의 결함이다.
+
+    엣지 케이스:
+        - `laws_detected` 가 음수: 스키마가 막지 않지만 값이 오면 0 이하로 취급되어
+          `PARTIAL` 이 `COUNT` 가 된다. 알람을 **더 민감하게** 만드는 방향이므로
+          안전망으로서는 안전한 쪽이다.
+        - 새 상태가 추가되면 `assert_never` 가 타입 검사에서 걸린다. **「그 외는
+          끊는다」가 이번 결함의 원인이었으므로 기본 분기를 두지 않는다.**
+    """
+    match status:
+        case OpsRunStatus.SUCCEEDED:
+            return ZeroStreakVerdict.BREAK
+        case OpsRunStatus.SUCCEEDED_ZERO:
+            return ZeroStreakVerdict.COUNT
+        case OpsRunStatus.PARTIAL:
+            return ZeroStreakVerdict.BREAK if laws_detected > 0 else ZeroStreakVerdict.COUNT
+        case OpsRunStatus.FAILED:
+            return ZeroStreakVerdict.SKIP
+        case OpsRunStatus.SKIPPED_CANARY_FAILED:
+            return ZeroStreakVerdict.SKIP
+        case _:  # pragma: no cover - assert_never 가 타입 검사에서 막는다
+            assert_never(status)
 
 
 def derive_status(

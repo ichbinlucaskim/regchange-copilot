@@ -11,6 +11,12 @@
 | `datasets/adversarial/` | 오도하기 쉬운 사례 (유사 용어, 무관한 유사 조문, 프롬프트 인젝션 시도) | 그럴듯하지만 틀린 제안을 만들어내지 않는가 |
 | `datasets/insufficient/` | 근거가 부족한 사례 | **"모른다" 또는 "영향 없음"을 말하는가.** 억지로 답을 만들면 실패다 |
 
+> **`datasets/insufficient/` 는 비어 있다 (2026-08-26 현재).** 그 역할은 골든셋 안의
+> 영향 없음 6종 22건이 하고 있다 — `EMPTY_OUT_OF_SCOPE`·`EMPTY_PART_UNRELATED`·
+> `EMPTY_NEW_PROVISION`·`OTHER_LAW_PLAIN`·`OTHER_LAW_B1_HIGH`·`DECOY_ONLY`.
+> **선언과 트리가 어긋나 있다는 사실을 지운 채로 두지 않는다** (`docs/23` §1.7).
+> 근거부족 인식률 0.8182 는 별도 집합이 아니라 골든셋의 부분집합에서 나온 값이다.
+
 `insufficient` 가 이 평가 체계의 핵심이다. golden 만 측정하면 항상 무언가를 답하는
 시스템이 최고점을 받는다. 이 도메인에서는 근거 없는 제안이 놓친 제안보다 비싸다.
 
@@ -43,6 +49,11 @@
 | `runners/delegation_sweep.py` | 위임 승격 `top_n` (R-22) | `docs/12-delegation-promotion-results.md` |
 | `runners/impact_eval.py` | 영향평가·부서 배정·gate 3단·재작성률·비용 | `docs/12-impact-assessment-results.md` |
 | `runners/routing_precheck.py` | **라우팅 사전 확인** — 경량 경로 발동률·점수 분리 가능성·절감 상한. **LLM 미호출** | `docs/22-routing-precheck.md` |
+| `runners/baseline.py` | B-1/B-2/B-3 과 LLM 파이프라인을 **같은 채점 함수로** 대조. **LLM 미호출** | `docs/16-baseline-comparison.md` |
+| `runners/adversarial_eval.py` · `adversarial_report.py` | 인젝션 차단율·스캐너 탐지율·인용 날조 폐기율 | `docs/18-adversarial-results.md` |
+| `runners/citation_density.py` | 개정 조문과 사내 규정의 인용 밀도 대조. **LLM 미호출** | `docs/21-golden-42-results.md` §7 |
+| `runners/citation_adequacy.py` | **인용 적합도 판정지** — gate 3단 `SUPPORTED` 전수를 사람이 판정할 표로 만들고(`--score` 로 채운 표를 읽어 F-6 을 낸다) **기계 판정을 한 조각도 싣지 않는다.** **LLM 미호출** | `docs/23-metrics-summary.md` §2 |
+| `runners/power_analysis.py` | **검정력 분석** — 쌍체 표준오차·신뢰구간·필요 표본 수 (Miller 2024). **LLM 미호출** | `docs/23-metrics-summary.md` §3 |
 
 `impact_eval` 은 `--grounding anchored|de-anchored` 로 **gate 3단 검증기를 갈아 끼운다.**
 기본값은 `anchored`(4단계 기준선)이며, 두 검증기를 같은 골든셋으로 돌려 대조한 결과가
@@ -55,17 +66,17 @@ HYBRID, `as_of=2026-02-01`, KURE-v1 그대로이며 승격은 검색 파라미�
 
 | 지표 | 정의 | 상태 |
 |---|---|---|
-| 인용 정확도 | 인용된 문단 ID가 검색 결과에 실재한 비율 | **측정 중** — gate 2단이 강제하므로 100%여야 한다 |
-| 인용 적합도 | 인용된 문단이 실제로 그 주장을 뒷받침한 비율 | **부분 측정** — gate 3단의 `SUPPORTED/PARTIAL/UNSUPPORTED` 분포가 기계 판정이고, 사람 판정은 6단계 |
-| 기권율 | `insufficient` 집합에서 답을 만들어내지 않은 비율 | **측정 중** (EMPTY 3건) |
-| 오탐율 | 영향이 없는 조문에 대해 제안을 만든 비율 | **측정 중** (NO_IMPACT 2건, decoy 인용 수) |
+| 인용 정확도 | 인용된 문단 ID가 검색 결과에 실재한 비율 | **측정 완료 — 1.0000 이며 항등식이다.** gate 2단이 강제하므로 담당자에게 도달한 출력에서는 언제나 1.0000 이다. 정보를 가진 값은 비율이 아니라 **폐기 발화 건수**다 (`docs/23` §1.4) |
+| 인용 적합도 | 인용된 문단이 실제로 그 주장을 뒷받침한 비율 | **F-6 = 0.0000 (n=20 전수 사람 판정), 95% 상한 0.168.** 상한 없이 인용하지 않는다. **이 척도는 「그 인용을 했어야 하는가」를 묻지 않아 case-013 을 통과시켰다** (`docs/23` §2.8) |
+| 기권율 | 정답이 `INSUFFICIENT_EVIDENCE` 인 케이스에서 답을 만들어내지 않은 비율 | **0.8182 (9/11)**, 42건. 목표 0.90 미달 |
+| 오탐율 | 영향이 없는 조문에 대해 제안을 만든 비율 | **NO_IMPACT 11건 전건 기권**, decoy 인용 1 (42건) |
 
 **인용 정확도와 적합도를 구별해서 본다** (ADR-013 엣지 케이스). ID가 실재하는데 그 문단이
 주장을 뒷받침하지 않는 것이 정확히 F-6 이며, gate 2단은 그것을 잡지 못한다.
 
 ## 규칙
 
-- 결과 파일(`results/`)은 커밋하지 않는다. 러너와 데이터셋으로부터 재생산되어야 한다.
+- 결과 파일(`results/`)은 **원칙적으로** 커밋하지 않는다. 다만 **문서가 결론의 근거로 이름을 대어 인용하는 결과만** 예외로 커밋한다 — LLM 결과는 재현되지 않기 때문이다(R-27). 예외 목록과 근거는 `.gitignore` 에 있다.
 - 실제 고객 데이터를 넣지 않는다.
 - 확인하지 않은 조항 번호를 데이터셋에 넣지 않는다. `TODO(verify)` 로 둔다.
 
